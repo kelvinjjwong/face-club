@@ -2,6 +2,7 @@
 
 # Press ⌃R to execute it or replace it with your code.
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+import yaml
 import logging
 import os
 from logging.config import fileConfig
@@ -9,9 +10,22 @@ from flask import Flask
 from apscheduler.schedulers.background import BackgroundScheduler
 
 os.makedirs("log", exist_ok=True)
-
 logging.config.fileConfig('logging.conf')
 logger = logging.getLogger('Scheduler')
+
+def load_conf_file(config_file):
+   with open(config_file, "r") as f:
+       config = yaml.safe_load(f)
+       server_conf = config[0]["server"]
+       exec_conf = config[1]["execution"]
+   return server_conf, exec_conf
+
+server_conf,exec_conf = load_conf_file("config.yaml")
+username=server_conf["username"]
+url=server_conf["url"]
+
+logger.info("loaded config item - %s", username)
+logger.info("loaded config item - %s", url)
 
 logger.info("Application started.")
 

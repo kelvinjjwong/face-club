@@ -1,0 +1,6 @@
+---
+- server:
+    username: 'ram'
+    url: 'http://localhost:3000/'
+- execution:
+    timeout: 60 #seconds

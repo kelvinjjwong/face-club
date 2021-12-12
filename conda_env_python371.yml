@@ -37,6 +37,7 @@ dependencies:
     - pillow==5.3.0
     - pytz==2021.3
     - pytz-deprecation-shim==0.1.0.post0
+    - pyyaml==6.0
     - six==1.16.0
     - typing-extensions==4.0.1
     - tzdata==2021.5
