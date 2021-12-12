@@ -13,6 +13,8 @@ os.makedirs("log", exist_ok=True)
 logging.config.fileConfig('logging.conf')
 logger = logging.getLogger('Scheduler')
 
+logger.info("Application started.")
+
 def job():
 	logger.info('job running')
 
