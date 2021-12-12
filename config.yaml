@@ -1,4 +1,6 @@
 ---
+- logging:
+    path: 'log'
 - server:
     username: 'ram'
     url: 'http://localhost:3000/'

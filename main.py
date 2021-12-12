@@ -2,27 +2,21 @@
 
 # Press ⌃R to execute it or replace it with your code.
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
-import yaml
+from common import load_conf_file
 import logging
 import os
 from logging.config import fileConfig
 from flask import Flask
 from apscheduler.schedulers.background import BackgroundScheduler
 
-os.makedirs("log", exist_ok=True)
-logging.config.fileConfig('logging.conf')
-logger = logging.getLogger('Scheduler')
-
-def load_conf_file(config_file):
-   with open(config_file, "r") as f:
-       config = yaml.safe_load(f)
-       server_conf = config[0]["server"]
-       exec_conf = config[1]["execution"]
-   return server_conf, exec_conf
-
-server_conf,exec_conf = load_conf_file("config.yaml")
+logging_conf,server_conf,exec_conf = load_conf_file("config.yaml")
+logpath=logging_conf["path"]
+os.makedirs(logpath, exist_ok=True)
 username=server_conf["username"]
 url=server_conf["url"]
+
+logging.config.fileConfig('logging.conf')
+logger = logging.getLogger('Scheduler')
 
 logger.info("loaded config item - %s", username)
 logger.info("loaded config item - %s", url)
