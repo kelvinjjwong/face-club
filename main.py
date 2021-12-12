@@ -2,12 +2,19 @@
 
 # Press ⌃R to execute it or replace it with your code.
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
-
+import logging
+import os
+from logging.config import fileConfig
 from flask import Flask
 from apscheduler.schedulers.background import BackgroundScheduler
 
+os.makedirs("log", exist_ok=True)
+
+logging.config.fileConfig('logging.conf')
+logger = logging.getLogger('Scheduler')
+
 def job():
-	print('job running')
+	logger.info('job running')
 
 scheduler = BackgroundScheduler()
 scheduler.start()
@@ -32,11 +39,13 @@ def hello():
 @app.route("/stop")
 def stopJob():
     scheduler.pause_job('face_job')
+    logger.info("stopped schedule")
     return "stopped"
 
 @app.route("/start")
 def startJob():
     scheduler.resume_job('face_job')
+    logger.info("started schedule")
     return "started"
 
 @app.route("/list/jobs")
