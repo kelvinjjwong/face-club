@@ -5,5 +5,5 @@ if [[ -e ~/.pip/pip.conf ]]; then
   echo "Backed-up pip.conf"
 fi
 
-cp python_env/pip.conf ~/.pip/pip.conf
+cp pip.conf ~/.pip/pip.conf
 echo "Copied pip.conf"
