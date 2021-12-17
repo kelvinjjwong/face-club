@@ -46,11 +46,6 @@ scheduler.add_job(
 app = Flask(__name__)
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
-
-
 @app.route("/")
 def hello():
     return render_template("index.html")
@@ -58,11 +53,11 @@ def hello():
 
 @app.route("/health")
 def health():
-    return {'isAvailable': True,
-            'startTime': app_start_date,
-            'currentTime': str(datetime.now()),
-            'executionTime': time_cost(app_start_time)
-            }
+    return str({'isAvailable': True,
+                'startTime': app_start_date,
+                'currentTime': str(datetime.now()),
+                'executionTime': time_cost(app_start_time)
+                }).replace("'", "\"")
 
 
 @app.route("/job/status")
@@ -71,37 +66,38 @@ def job_status():
     job = scheduler.get_job(job_id)
     if job is not None:
         if str(job.next_run_time) == 'None':
-            return {
-                    'status': 'stopped',
-                    'id': job_id,
-                    'start_date': str(job.trigger.start_date),
-                    'interval': str(job.trigger.interval)
-                    }
+            return str({
+                'status': 'stopped',
+                'id': job_id,
+                'start_date': str(job.trigger.start_date),
+                'interval': str(job.trigger.interval)
+            }).replace("'", "\"")
         else:
-            return {
-                    'status': 'running',
-                    'id': job_id,
-                    'start_date': str(job.trigger.start_date),
-                    'interval': str(job.trigger.interval)
-                    }
+            return str({
+                'status': 'running',
+                'id': job_id,
+                'start_date': str(job.trigger.start_date),
+                'interval': str(job.trigger.interval)
+            }).replace("'", "\"")
     else:
-        return {
-                    'status': 'not_initiated',
-                    'id': job_id
-                }
+        return str({
+            'status': 'not_initiated',
+            'id': job_id
+        }).replace("'", "\"")
+
 
 @app.route("/job/stop")
 def stop_job():
     scheduler.pause_job('face_job')
     logger.info("stopped schedule")
-    return {'status': 'stopped'}
+    return str({'status': 'stopped'}).replace("'", "\"")
 
 
 @app.route("/job/start")
 def start_job():
     scheduler.resume_job('face_job')
     logger.info("started schedule")
-    return {'status': 'started'}
+    return str({'status': 'started'}).replace("'", "\"")
 
 
 @app.route("/job/list")
@@ -119,16 +115,15 @@ def list_jobs():
                    'start_date': str(job.trigger.start_date),
                    'interval': str(job.trigger.interval),
                    'next_run_time': str(job.next_run_time),
-                   'executor': str(repr(job.executor)),
                    'job_status': job_status
                    }
 
         schedules.append(jobdict)
 
     logger.info(schedules)
-    return str(schedules)
+    return str(schedules).replace("'", "\"")
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('world')
+    app.run(host='0.0.0.0', port=80, debug=False)

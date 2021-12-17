@@ -1,1 +1,1 @@
-ps -ef | grep -e '/bin/flask run$'
+ps -ef | grep '/bin/flask run' | grep -v grep

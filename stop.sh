@@ -1,5 +1,5 @@
-ps -ef | grep -e '/bin/flask run$'
-pid=`ps -ef | grep -e '/bin/flask run$' | awk -F' ' '{print $2}'`
+source ./query.sh
+pid=`ps -ef | grep '/bin/flask run' | grep -v grep | awk -F' ' '{print $2}'`
 if [[ "$pid" != "" ]]; then
   kill -15 $pid
   echo "killed pid $pid"

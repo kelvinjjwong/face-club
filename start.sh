@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ./stop.sh
+
 ### conda shell initialization
 conda_exec=`which conda`
 if [[ "$conda_exec" = "" ]]; then
@@ -18,6 +20,7 @@ conda activate $ENV_NAME
 export FLASK_APP=main.py
 export FLASK_ENV=development
 export FLASK_DEBUG=0
+export FLASK_RUN_PORT=80
 if [[ "`which flask`" = "" ]]; then
   echo "unable to locate command flask"
   echo
@@ -25,6 +28,6 @@ if [[ "`which flask`" = "" ]]; then
 fi
 
 ### flask startup
-nohup flask run & 1>/dev/null 2>/dev/null
+nohup flask run --host=0.0.0.0 1>/dev/null 2>/dev/null &
 
-echo "Application started."
+echo "Application started at http://localhost:$FLASK_RUN_PORT"
