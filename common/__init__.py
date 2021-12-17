@@ -1,1 +1,1 @@
-from .util import load_conf_file
+from .util import config_load, time_cost
