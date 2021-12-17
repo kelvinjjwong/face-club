@@ -19,7 +19,7 @@ class FaceClub:
         self.config = AppConfig(config_file)
         logpath = self.config.logging("path")
         os.makedirs(logpath, exist_ok=True)
-        logging.config.fileConfig('logging.conf')
+        logging.config.fileConfig('conf/logging.conf')
 
     def health(self):
         execution_time = self.time_since(self.app_start_time)

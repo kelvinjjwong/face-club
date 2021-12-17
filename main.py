@@ -13,7 +13,7 @@ import signal
 
 isShuttingDown = False
 
-faceClub = FaceClub("config.yaml")
+faceClub = FaceClub("conf/config.yaml")
 
 logger = logging.getLogger('Scheduler')
 
