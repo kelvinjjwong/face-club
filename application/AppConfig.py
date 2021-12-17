@@ -35,6 +35,18 @@ class AppConfig:
             self.execution_conf = config["execution"]
 
     def load_database_config(self, database_config_file):
+        """
+        Load configuration from an external YAML file. The file should contain following fields:
+
+        - host: str
+        - port: int
+        - username: str
+        - password: str
+        - database: str
+        - schema: str
+
+        :param database_config_file: path of an external YAML file
+        """
         self.logger.info("Loading database config from yaml file - %s" % database_config_file)
         self.database_config_file = str(database_config_file).replace("~", os.environ["HOME"])
         with open(self.database_config_file, "r") as f:
