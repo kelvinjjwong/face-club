@@ -8,7 +8,7 @@ import time
 faceClub = FaceClub("conf/config.yaml")
 
 logger = logging.getLogger('Scheduler')
-asyncio.run(faceClub.imageDatabase.families())
+asyncio.run(faceClub.imageDatabase.unrecognizedFaces())
 
 
 def face_job():

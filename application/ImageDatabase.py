@@ -35,4 +35,28 @@ class ImageDatabase:
             self.logger.info(value)
             self.logger.info(value["name"])
         await conn.close()
-        pass
+
+    async def unrecognizedFaces(self):
+        conn = await asyncpg.connect(user=self.username,
+                                     password=self.password,
+                                     database=self.database,
+                                     host=self.host)
+        values = await conn.fetch(
+            """
+SELECT * from "ImageFace"
+where "imageId" in (
+SELECT t."imageId" from (
+SELECT DISTINCT "imageId","imageYear","imageMonth","imageDay" from "ImageFace"
+ORDER BY "imageYear" ASC, "imageMonth" ASC, "imageDay" ASC
+OFFSET 0 LIMIT 100
+) t
+)
+AND locked='f' AND ("peopleId" = 'Unknown' or "peopleId" is NULL)
+order by "imageYear" asc, "imageMonth" asc, "imageDay" asc, "imageId" asc, filename asc
+            """
+        )
+        self.logger.info("Got %i records" % len(values))
+        for value in values:
+            path = ("%s%s/%s" % (value["cropPath"], value["subPath"], value["filename"]))
+            self.logger.info(path)
+        await conn.close()
