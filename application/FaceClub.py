@@ -4,22 +4,36 @@ import os
 import logging
 from logging.config import fileConfig
 from datetime import datetime
+import atexit
+import sys
+import signal
 
 from application.AppConfig import AppConfig
+from application.Schedule import Schedule
 
 
 class FaceClub:
     config = None
+    logger = None
+    schedule = None
     app_start_time = None
     app_start_date = None
 
+    isShuttingDown = False
+
     def __init__(self, config_file):
+        signal.signal(signal.SIGINT, self.shutdown_signal_handler)
+        atexit.register(self.shutdown_handler)
         self.app_start_time = time.time()
         self.app_start_date = str(datetime.now())
         self.config = AppConfig(config_file)
         logpath = self.config.logging("path")
         os.makedirs(logpath, exist_ok=True)
         logging.config.fileConfig('conf/logging.conf')
+        self.logger = logging.getLogger('App')
+        self.schedule = Schedule()
+        self.schedule.start()
+        self.logger.info("Application started.")
 
     def health(self):
         execution_time = self.time_since(self.app_start_time)
@@ -29,6 +43,19 @@ class FaceClub:
                 'currentTime': current_time,
                 'executionTime': execution_time
                 }
+
+    def shutdown_signal_handler(self, signum, frame):
+        self.logger.info('Shutting down ...')
+        self.isShuttingDown = True
+        self.schedule.isShuttingDown = True
+        sys.exit(0)
+
+    def shutdown_handler(self):
+        self.logger.info("Cleaning up scheduled jobs ...")
+        self.isShuttingDown = True
+        self.schedule.isShuttingDown = True
+        self.schedule.shutdown()
+        self.logger.info("Application shutdown.")
 
     def time_since(*arg):
         if len(arg) != 0:
