@@ -57,21 +57,18 @@ class FaceClub:
         self.schedule.shutdown()
         self.logger.info("Application shutdown.")
 
-    def time_since(*arg):
-        if len(arg) != 0:
-            elapsed_time = time.time() - arg[0]
-            hours = math.floor(elapsed_time / (60 * 60))
-            elapsed_time = elapsed_time - hours * (60 * 60)
-            minutes = math.floor(elapsed_time / 60)
-            elapsed_time = elapsed_time - minutes * (60)
-            seconds = math.floor(elapsed_time)
-            elapsed_time = elapsed_time - seconds
-            ms = elapsed_time * 1000
-            if hours != 0:
-                return "%d hours %d minutes %d seconds" % (hours, minutes, seconds)
-            elif minutes != 0:
-                return "%d minutes %d seconds" % (minutes, seconds)
-            else:
-                return "%d seconds %f ms" % (seconds, ms)
+    def time_since(self, original_time):
+        elapsed_time = time.time() - original_time
+        hours = math.floor(elapsed_time / (60 * 60))
+        elapsed_time = elapsed_time - hours * (60 * 60)
+        minutes = math.floor(elapsed_time / 60)
+        elapsed_time = elapsed_time - minutes * (60)
+        seconds = math.floor(elapsed_time)
+        elapsed_time = elapsed_time - seconds
+        ms = elapsed_time * 1000
+        if hours != 0:
+            return "%d hours %d minutes %d seconds" % (hours, minutes, seconds)
+        elif minutes != 0:
+            return "%d minutes %d seconds" % (minutes, seconds)
         else:
-            return str(time.time())
+            return "%d seconds %f ms" % (seconds, ms)
