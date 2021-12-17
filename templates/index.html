@@ -19,31 +19,35 @@
         }
     </style>
     <script>
-        let fetchQueryResult = () => {
+        let fetchQueryResult = (action) => {
             const xmlHttp = new XMLHttpRequest();
             xmlHttp.onreadystatechange = function () {
                 if (xmlHttp.readyState === 4) {
                     if (xmlHttp.status === 200) {
                         console.log(xmlHttp.responseText);
-                        const data = JSON.parse(xmlHttp.responseText);
-                        if (Array.isArray(data)) {
-                            document.getElementById("msg").innerText = "Received data at "+ new Date().toLocaleString();
-                            tableFromJson(data);
-                        }else{
-                            let status = data.status;
-                            let message = data.message;
-                            document.getElementById("msg").innerText = status + " - " + message;
+                        let data = JSON.parse(xmlHttp.responseText);
+                        if (! Array.isArray(data)) {
+                            data = JSON.parse("[" + xmlHttp.responseText +"]")
                         }
+                        document.getElementById("msg").innerText = "Received data at "+ new Date().toLocaleString();
+                        tableFromJson(data);
                     }else{
                         const data = xmlHttp.responseText;
                         document.getElementById("msg").innerText = data;
                     }
                 }
             };
-            xmlHttp.open("GET", "/job/list", true);
-            xmlHttp.setRequestHeader("Content-type", "text/plain");
+
             document.getElementById("msg").innerText = "Executing ...";
-            xmlHttp.send();
+            if (action === "job_status"){
+                xmlHttp.open("GET", "/job/list", true);
+                xmlHttp.setRequestHeader("Content-type", "text/plain");
+                xmlHttp.send();
+            }else if(action === "health"){
+                xmlHttp.open("GET", "/health", true);
+                xmlHttp.setRequestHeader("Content-type", "text/plain");
+                xmlHttp.send();
+            }
         }
 
         let tableFromJson = (arrayData) => {
@@ -93,6 +97,8 @@
 	<h3>
     	Click the button to create a dynamic table using data extracted from a JSON array.
     </h3>
+    <input type='button' onclick='fetchQueryResult("health")'
+    	value='Health Check' />
     <input type='button' onclick='fetchQueryResult("job_status")'
     	value='Job Status' />
 

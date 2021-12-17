@@ -2,35 +2,55 @@
 
 # Press ⌃R to execute it or replace it with your code.
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
-from common import config_load, time_cost
-import time
-from datetime import datetime
+from common import FaceClub, to_json
 import logging
-import os
-from logging.config import fileConfig
 from flask import Flask, render_template
 from apscheduler.schedulers.background import BackgroundScheduler
+import atexit
+import time
+import sys
+import signal
 
-app_start_time = time.time()
-app_start_date = str(datetime.now())
+isShuttingDown = False
 
-logging_conf, server_conf, exec_conf = config_load("config.yaml")
-logpath = logging_conf["path"]
-os.makedirs(logpath, exist_ok=True)
-username = server_conf["username"]
-url = server_conf["url"]
+faceClub = FaceClub("config.yaml")
 
-logging.config.fileConfig('logging.conf')
 logger = logging.getLogger('Scheduler')
-
-logger.info("loaded config item - %s", username)
-logger.info("loaded config item - %s", url)
 
 logger.info("Application started.")
 
 
+@atexit.register
+def goodbye():
+    logger.info("Cleaning up scheduled jobs ...")
+    global isShuttingDown
+    isShuttingDown = True
+    scheduler.remove_all_jobs()
+    scheduler.shutdown()
+    logger.info("Application shutdown.")
+
+
+def shutdown_signal_handler(signum, frame):
+    logger.info('Shutting down ...')
+    global isShuttingDown
+    isShuttingDown = True
+    sys.exit(0)
+
+
+signal.signal(signal.SIGINT, shutdown_signal_handler)
+
+
 def face_job():
-    logger.info('job running')
+    logger.info('job task started')
+    seconds = 15
+    while seconds > 0:
+        logger.info("is shutting down %s" % isShuttingDown)
+        if isShuttingDown:
+            logger.info("break job task due to shutting down")
+            break
+        time.sleep(1)
+        seconds -= 1
+    logger.info('job task completed')
 
 
 scheduler = BackgroundScheduler()
@@ -53,11 +73,7 @@ def hello():
 
 @app.route("/health")
 def health():
-    return str({'isAvailable': True,
-                'startTime': app_start_date,
-                'currentTime': str(datetime.now()),
-                'executionTime': time_cost(app_start_time)
-                }).replace("'", "\"")
+    return to_json(faceClub.health())
 
 
 @app.route("/job/status")
@@ -66,38 +82,38 @@ def job_status():
     job = scheduler.get_job(job_id)
     if job is not None:
         if str(job.next_run_time) == 'None':
-            return str({
+            return to_json({
                 'status': 'stopped',
                 'id': job_id,
                 'start_date': str(job.trigger.start_date),
                 'interval': str(job.trigger.interval)
-            }).replace("'", "\"")
+            })
         else:
-            return str({
+            return to_json({
                 'status': 'running',
                 'id': job_id,
                 'start_date': str(job.trigger.start_date),
                 'interval': str(job.trigger.interval)
-            }).replace("'", "\"")
+            })
     else:
-        return str({
+        return to_json({
             'status': 'not_initiated',
             'id': job_id
-        }).replace("'", "\"")
+        })
 
 
 @app.route("/job/stop")
 def stop_job():
     scheduler.pause_job('face_job')
     logger.info("stopped schedule")
-    return str({'status': 'stopped'}).replace("'", "\"")
+    return to_json({'status': 'stopped'})
 
 
 @app.route("/job/start")
 def start_job():
     scheduler.resume_job('face_job')
     logger.info("started schedule")
-    return str({'status': 'started'}).replace("'", "\"")
+    return to_json({'status': 'started'})
 
 
 @app.route("/job/list")
@@ -121,7 +137,7 @@ def list_jobs():
         schedules.append(jobdict)
 
     logger.info(schedules)
-    return str(schedules).replace("'", "\"")
+    return to_json(schedules)
 
 
 # Press the green button in the gutter to run the script.
