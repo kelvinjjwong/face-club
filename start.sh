@@ -27,6 +27,18 @@ if [[ "`which flask`" = "" ]]; then
   exit 1
 fi
 
+realpath() {
+    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+}
+
+### mandatory environ variables
+FACECLUB_DATABASE_CONFIG=$(realpath "~/database.yaml")
+if [[ ! -e $FACECLUB_DATABASE_CONFIG ]]; then
+  echo "FACECLUB_DATABASE_CONFIG file does not exist - $FACECLUB_DATABASE_CONFIG"
+  echo
+  exit 1
+fi
+
 ### flask startup
 nohup flask run --host=0.0.0.0 1>/dev/null 2>/dev/null &
 

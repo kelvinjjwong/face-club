@@ -1,3 +1,5 @@
+import asyncio
+
 from application import FaceClub, to_json
 import logging
 from flask import Flask, render_template
@@ -6,6 +8,7 @@ import time
 faceClub = FaceClub("conf/config.yaml")
 
 logger = logging.getLogger('Scheduler')
+asyncio.run(faceClub.imageDatabase.families())
 
 
 def face_job():

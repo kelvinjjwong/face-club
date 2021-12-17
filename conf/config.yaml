@@ -1,8 +1,8 @@
 ---
-- logging:
+logging:
     path: 'log'
-- server:
+server:
     username: 'ram'
     url: 'http://localhost:3000/'
-- execution:
+execution:
     timeout: 60 #seconds
