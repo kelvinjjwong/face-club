@@ -9,28 +9,42 @@ class AppConfig:
     logger = None
 
     config_file = ""
-    database_config_file = ""
+    external_database_config_file = ""
+    internal_database_url = ""
 
     logging_conf = {}
     database_conf = {}
+    workspace_conf = {}
 
     def __init__(self, config_file):
         self.config_file = config_file
         self.load()
         logpath = self.logging("path")
         os.makedirs(logpath, exist_ok=True)
+        os.makedirs("db", exist_ok=True)
         logging.config.fileConfig('conf/logging.conf')
         self.logger = logging.getLogger('Config')
-        self.printAllEnvVar()
-        self.ensureEnvVar("FACECLUB_DATABASE_CONFIG")
-        self.load_database_config(os.environ["FACECLUB_DATABASE_CONFIG"])
+        self.logAllEnvVar()
+        self.load_external_database_config()
+        self.logger.info("workspace dataset: %s" % self.workspace("dataset"))
 
     def load(self):
         with open(self.config_file, "r") as f:
             config = yaml.safe_load(f)
-            self.logging_conf = config["logging"]
+            self.logging_conf = self.realpath(config["logging"])
+            self.workspace_conf = self.realpath(config["workspace"])
+            self.external_database_config_file = self.realpath(config["database"]["external"])
+            self.internal_database_url = self.realpath(config["database"]["internal-url"])
 
-    def load_database_config(self, database_config_file):
+    def realpath(self, obj):
+        if isinstance(obj, dict):
+            for field, val in obj.items():
+                obj[field] = self.realpath(val)
+            return obj
+        else:
+            return str(obj).replace("~", os.environ["HOME"])
+
+    def load_external_database_config(self):
         """
         Load configuration from an external YAML file. The file should contain following fields:
 
@@ -40,16 +54,13 @@ class AppConfig:
         - password: str
         - database: str
         - schema: str
-
-        :param database_config_file: path of an external YAML file
         """
-        self.logger.info("Loading database config from yaml file - %s" % database_config_file)
-        self.database_config_file = str(database_config_file).replace("~", os.environ["HOME"])
-        with open(self.database_config_file, "r") as f:
+        self.logger.info("Loading database config from yaml file - %s" % self.external_database_config_file)
+        with open(self.external_database_config_file, "r") as f:
             config = yaml.safe_load(f)
             self.database_conf = config
 
-    def printAllEnvVar(self):
+    def logAllEnvVar(self):
         for item, value in sorted(os.environ.items()):
             self.logger.info("Env_Var: %s - Value: %s" % (item, value))
 
@@ -63,3 +74,6 @@ class AppConfig:
 
     def database(self, field):
         return self.database_conf[field]
+
+    def workspace(self, field):
+        return self.workspace_conf[field]

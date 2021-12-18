@@ -1,4 +1,5 @@
 .idea/
 log/
+db/
 /nohup.out
 __pycache__

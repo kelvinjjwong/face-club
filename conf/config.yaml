@@ -1,3 +1,8 @@
 ---
+workspace:
+    dataset: '~/face-club/dataset/'
+database:
+    external: '~/face-club/database.yaml'
+    internal-url: 'sqlite:///~/db/face.db'
 logging:
     path: 'log'
