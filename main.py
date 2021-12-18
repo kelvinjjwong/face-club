@@ -10,7 +10,7 @@ faceClub = FaceClub("conf/config.yaml")
 
 logger = logging.getLogger('Scheduler')
 if faceClub.config.external_database_enable:
-    asyncio.run(faceClub.imageDatabase.unrecognizedFaces(100))
+    external_records = asyncio.run(faceClub.imageDatabase.unrecognizedFaces(100))
 
 faceClub.faceDatabase.dropSchema()
 faceClub.faceDatabase.initSchema()
@@ -24,7 +24,11 @@ face2 = faceClub.faceDatabase.get_face('id1')
 print(face2)
 faces = faceClub.faceDatabase.get_faces()
 print(faces)
-
+faceClub.fileMovement.cleanWorkspace()
+incoming_faces = faceClub.fileMovement.fromRepositoryToWorkspace(external_records)
+print(incoming_faces)
+faceClub.fileMovement.fromWorkspaceToPretrainDataset(incoming_faces)
+faceClub.fileMovement.backupDataset()
 
 def face_job():
     logger.info('job task started')

@@ -6,6 +6,7 @@ import atexit
 import sys
 import signal
 
+from application.FileMovement import FileMovement
 from application.AppConfig import AppConfig
 from application.FaceDatabase import FaceDatabase
 from application.ImageDatabase import ImageDatabase
@@ -19,6 +20,7 @@ class FaceClub:
     schedule = None
     imageDatabase = None
     faceDatabase = None
+    fileMovement = None
 
     app_start_time = None
     app_start_date = None
@@ -32,6 +34,7 @@ class FaceClub:
         self.logger = logging.getLogger('App')
         self.faceDatabase = FaceDatabase(self.config.internal_database_url)
         self.imageDatabase = ImageDatabase(self.config.database_conf)
+        self.fileMovement = FileMovement(self.config.workspace_conf)
         self.schedule = Schedule()
         self.schedule.start()
         signal.signal(signal.SIGINT, self.shutdown_signal_handler)

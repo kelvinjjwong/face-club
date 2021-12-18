@@ -60,6 +60,7 @@ order by "imageYear" asc, "imageMonth" asc, "imageDay" asc, "imageId" asc, filen
             path = ("%s%s/%s" % (value["cropPath"], value["subPath"], value["filename"]))
             self.logger.info(path)
         await conn.close()
+        return values
 
     async def updateFace(self, id, peopleId):
         conn = await asyncpg.connect(user=self.username,
