@@ -1,15 +1,29 @@
 import asyncio
-
-from application import FaceClub, to_json
-import logging
-from flask import Flask, render_template
 import time
+import logging
+from application import FaceClub, to_json
+from flask import Flask, render_template
+
+app = Flask(__name__)
 
 faceClub = FaceClub("conf/config.yaml")
 
 logger = logging.getLogger('Scheduler')
 if faceClub.config.external_database_enable:
     asyncio.run(faceClub.imageDatabase.unrecognizedFaces(100))
+
+faceClub.faceDatabase.dropSchema()
+faceClub.faceDatabase.initSchema()
+face = faceClub.faceDatabase.empty_face()
+face['faceId'] = 'id1'
+face['imageId'] = 'imageId1'
+face['sourcePath'] = '/url/path'
+face['imageYear'] = 2021
+faceClub.faceDatabase.insert_face(face)
+face2 = faceClub.faceDatabase.get_face('id1')
+print(face2)
+faces = faceClub.faceDatabase.get_faces()
+print(faces)
 
 
 def face_job():
@@ -27,7 +41,6 @@ def face_job():
 
 faceClub.schedule.add('face_job', 5, face_job)
 
-app = Flask(__name__)
 
 
 @app.route("/")

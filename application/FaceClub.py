@@ -7,6 +7,7 @@ import sys
 import signal
 
 from application.AppConfig import AppConfig
+from application.FaceDatabase import FaceDatabase
 from application.ImageDatabase import ImageDatabase
 from application.Schedule import Schedule
 
@@ -17,6 +18,7 @@ class FaceClub:
     config = None
     schedule = None
     imageDatabase = None
+    faceDatabase = None
 
     app_start_time = None
     app_start_date = None
@@ -28,6 +30,7 @@ class FaceClub:
         self.app_start_date = str(datetime.now())
         self.config = AppConfig(config_file)
         self.logger = logging.getLogger('App')
+        self.faceDatabase = FaceDatabase(self.config.internal_database_url)
         self.imageDatabase = ImageDatabase(self.config.database_conf)
         self.schedule = Schedule()
         self.schedule.start()

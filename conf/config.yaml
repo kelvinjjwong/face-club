@@ -4,8 +4,8 @@ workspace:
 database:
     external:
         config: '~/face-club/database.yaml'
-        enable: false
+        enable: true
     internal:
-        url: 'sqlite:///~/db/face.db'
+        url: 'sqlite:///db/face.db'
 logging:
     path: 'log'

@@ -26,8 +26,19 @@ class FaceDatabase:
     def dropSchema(self):
         conn = self.engine.connect()
         conn.execute("""
-        DROP TABLE faces
+        DROP TABLE IF EXISTS faces
         """)
+
+    def empty_face(self):
+        return {
+            'faceId': '',
+            'imageId': '',
+            'sourcePath': '',
+            'peopleId': 'Unknown',
+            'peopleIdAssign': 'Unknown',
+            'imageYear': 0,
+            'sample': False
+        }
 
     def insert_face(self, face):
         conn = self.engine.connect()
@@ -74,7 +85,7 @@ class FaceDatabase:
                 'peopleId': peopleId,
                 'peopleIdAssign': peopleIdAssign,
                 'imageYear': imageYear,
-                'sample': sample
+                'sample': False if sample == 0 else True
             }
-            faces.insert(face)
+            faces.append(face)
         return faces
