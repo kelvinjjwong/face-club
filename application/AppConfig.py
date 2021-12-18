@@ -12,6 +12,7 @@ class AppConfig:
     config_file = ""
     external_database_config_file = ""
     external_database_enable = False
+    external_database_fetch_amount = 1
     internal_database_url = ""
 
     logging_conf = {}
@@ -27,12 +28,17 @@ class AppConfig:
         self.logger = logging.getLogger('Config')
         self.logAllEnvVar()
         self.ensureFileExist("database.external.config", self.external_database_config_file)
-        self.load_external_database_config()
-        self.logger.info("external db enabled: %s" % self.external_database_enable)
-        self.logger.info("workspace dataset: %s" % self.workspace("dataset"))
+        self.logger.info("internal db url:          %s" % self.internal_database_url)
+        self.logger.info("external db config:       %s" % self.external_database_config_file)
+        self.logger.info("external db enabled:      %s" % self.external_database_enable)
+        self.logger.info("external db fetch amount: %s" % self.external_database_fetch_amount)
+        self.logger.info("workspace dataset folder: %s" % self.workspace("dataset"))
+        self.logger.info("workspace images  folder: %s" % self.workspace("images"))
+        self.logger.info("workspace model   folder: %s" % self.workspace("model"))
         os.makedirs(self.workspace("dataset"), exist_ok=True)
         os.makedirs(self.workspace("model"), exist_ok=True)
         os.makedirs(self.workspace("images"), exist_ok=True)
+        self.load_external_database_config()
 
     def load(self):
         with open(self.config_file, "r") as f:
@@ -41,6 +47,7 @@ class AppConfig:
             self.workspace_conf = self.realpath(config["workspace"])
             self.external_database_config_file = self.realpath(config["database"]["external"]["config"])
             self.external_database_enable = config["database"]["external"]["enable"]
+            self.external_database_fetch_amount = config["database"]["external"]["fetch-amount"]
             self.internal_database_url = self.realpath(config["database"]["internal"]["url"])
 
     def realpath(self, obj):

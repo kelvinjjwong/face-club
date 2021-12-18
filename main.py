@@ -22,7 +22,7 @@ face['imageYear'] = 2021
 faceClub.faceDatabase.insert_face(face)
 face2 = faceClub.faceDatabase.get_face('id1')
 print(face2)
-faces = faceClub.faceDatabase.get_faces()
+faces = faceClub.faceDatabase.get_faces(limit=faceClub.config.external_database_fetch_amount)
 print(faces)
 faceClub.fileMovement.cleanWorkspace()
 incoming_faces = faceClub.fileMovement.fromRepositoryToWorkspace(external_records)

@@ -7,6 +7,7 @@ database:
     external:
         config: '~/face-club/database.yaml'
         enable: true
+        fetch-amount: 100
     internal:
         url: 'sqlite:///db/face.db'
 logging:
