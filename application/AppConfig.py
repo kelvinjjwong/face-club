@@ -21,8 +21,7 @@ class AppConfig:
     def __init__(self, config_file):
         self.config_file = config_file
         self.load()
-        logpath = self.logging("path")
-        os.makedirs(logpath, exist_ok=True)
+        os.makedirs(self.logging("path"), exist_ok=True)
         os.makedirs("db", exist_ok=True)
         logging.config.fileConfig('conf/logging.conf')
         self.logger = logging.getLogger('Config')
@@ -31,6 +30,9 @@ class AppConfig:
         self.load_external_database_config()
         self.logger.info("external db enabled: %s" % self.external_database_enable)
         self.logger.info("workspace dataset: %s" % self.workspace("dataset"))
+        os.makedirs(self.workspace("dataset"), exist_ok=True)
+        os.makedirs(self.workspace("model"), exist_ok=True)
+        os.makedirs(self.workspace("images"), exist_ok=True)
 
     def load(self):
         with open(self.config_file, "r") as f:

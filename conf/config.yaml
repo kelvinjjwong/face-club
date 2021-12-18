@@ -1,6 +1,8 @@
 ---
 workspace:
     dataset: '~/face-club/dataset/'
+    model: '~/face-club/model/'
+    images: '~/face-club/images/'
 database:
     external:
         config: '~/face-club/database.yaml'
