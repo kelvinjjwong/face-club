@@ -13,6 +13,23 @@ class FileMovement:
         self.workspace_conf = workspace_conf
         pass
 
+    def check_mount_point(self, external_db_records):
+        overall_result = True
+        volumes = set()
+        volumes_dict = {}
+        for image in external_db_records:
+            path = os.path.realpath(image["cropPath"])
+            parts = path.split(os.path.sep)
+            if parts[1] == "Volumes":
+                volume = ("/%s/%s" % (parts[1], parts[2]))
+                volumes.add(volume)
+        for volume in volumes:
+            ex = os.path.exists(volume)
+            volumes_dict[volume] = ex
+            overall_result = overall_result & ex
+        return overall_result, volumes_dict
+
+
     def fromRepositoryToWorkspace(self, external_db_records):
         rtn = []
         folder = self.workspace_conf["images"]
@@ -20,10 +37,10 @@ class FileMovement:
             src_file = ("%s%s/%s" % (image["cropPath"], image["subPath"], image["filename"]))
             self.logger.info("src: %s" % src_file)
             _, extension = os.path.splitext(image["filename"])
-            new_filename = ("%s.%s" % (image["id"], extension))
+            new_filename = ("%s%s" % (image["id"], extension))
             dest_file = os.path.join(folder, new_filename)
             self.logger.info("des: %s" % dest_file)
-            #shutil.copy(src_file, dest_file)
+            shutil.copy(src_file, dest_file)
             rec = {
                 "faceId": image["id"],
                 "imageId": image["imageId"],
@@ -50,6 +67,7 @@ class FileMovement:
                     shutil.rmtree(file_path)
             except Exception as e:
                 self.logger.error('Failed to delete %s. Reason: %s' % (file_path, e))
+        self.logger.info("Cleaned up workspace")
 
     def fromWorkspaceToPretrainDataset(self, internal_db_records):
         source_folder = self.workspace_conf["images"]
@@ -59,12 +77,12 @@ class FileMovement:
             if peopleId == "Unknown":
                 continue
                 #pass
-            filename = ("%s.%s" % (face["faceId"], face["fileExt"]))
+            filename = ("%s%s" % (face["faceId"], face["fileExt"]))
             source_filename = os.path.join(source_folder, filename)
             target_folder = os.path.join(dataset, peopleId, filename)
             self.logger.info("pretrain src: %s" % source_filename)
             self.logger.info("pretrain des: %s" % target_folder)
-            # shutil.copy(source_filename, target_folder)
+            shutil.copy(source_filename, target_folder)
 
     def backupDataset(self):
         folder = os.path.realpath(self.workspace_conf["dataset"])
@@ -74,6 +92,8 @@ class FileMovement:
         dt = now.strftime("%Y-%m-%d_%H-%M-%S")
         new_folder_name = ("%s_%s" % (folder_name, dt))
         new_folder = os.path.join(parent_folder, new_folder_name)
-        print("mv from: %s" % folder)
-        print("mv to  : %s" % new_folder)
+        self.logger.info("mv from: %s" % folder)
+        self.logger.info("mv to  : %s" % new_folder)
+        shutil.move(folder, new_folder)
+        os.makedirs(folder, exist_ok=True)
 

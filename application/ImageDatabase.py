@@ -55,14 +55,12 @@ AND locked='f' AND ("peopleId" = 'Unknown' or "peopleId" is NULL)
 order by "imageYear" asc, "imageMonth" asc, "imageDay" asc, "imageId" asc, filename asc
             """ % amount
         )
-        self.logger.info("Got %i records" % len(values))
-        for value in values:
-            path = ("%s%s/%s" % (value["cropPath"], value["subPath"], value["filename"]))
-            self.logger.info(path)
+        self.logger.info("got %i unrecognized ImageFace db records" % len(values))
         await conn.close()
         return values
 
     async def updateFace(self, id, peopleId):
+        self.logger.info("updating ImageFace db record with id=%s peopleId=%s" % (id, peopleId))
         conn = await asyncpg.connect(user=self.username,
                                      password=self.password,
                                      database=self.database,
@@ -74,5 +72,4 @@ order by "imageYear" asc, "imageMonth" asc, "imageDay" asc, "imageId" asc, filen
             WHERE "id" = $2
             """, peopleId, id
         )
-        self.logger.info("Updated")
         await conn.close()

@@ -5,6 +5,7 @@ from datetime import datetime
 import atexit
 import sys
 import signal
+import asyncio
 
 from application.FileMovement import FileMovement
 from application.AppConfig import AppConfig
@@ -78,3 +79,34 @@ class FaceClub:
             return "%d minutes %d seconds" % (minutes, seconds)
         else:
             return "%d seconds %f ms" % (seconds, ms)
+
+    def fromRepositoryToWorkspace(self):
+        if self.config.external_database_enable:
+            self.fileMovement.cleanWorkspace()
+            self.faceDatabase.dropSchema()
+            self.faceDatabase.initSchema()
+            external_records = asyncio.run(self.imageDatabase.unrecognizedFaces(100))
+            all_mounted, volumes = self.fileMovement.check_mount_point(external_records)
+            if not all_mounted:
+                msg = "External volume is not mounted. Operation aborted."
+                self.logger.error(msg)
+                self.logger.error(volumes)
+                return False, volumes
+            else:
+                self.logger.info(volumes)
+                self.logger.info("External volume is mounted.")
+            incoming_faces = self.fileMovement.fromRepositoryToWorkspace(external_records)
+            for face in incoming_faces:
+                self.faceDatabase.insert_face(face)
+            msg = "Processed %s face records" % len(incoming_faces)
+            self.logger.info(msg)
+            return True, incoming_faces
+        else:
+            msg = "External DB connection is DISABLED. Operation aborted."
+            self.logger.info(msg)
+            return False, [msg]
+
+    def preparePretrainDataset(self):
+        self.fileMovement.backupDataset()
+        # TODO copy images from external volumes
+        pass

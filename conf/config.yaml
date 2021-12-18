@@ -10,5 +10,6 @@ database:
         fetch-amount: 100
     internal:
         url: 'sqlite:///db/face.db'
+        display-amount: 1000
 logging:
     path: 'log'

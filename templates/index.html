@@ -47,6 +47,14 @@
                 xmlHttp.open("GET", "/health", true);
                 xmlHttp.setRequestHeader("Content-type", "text/plain");
                 xmlHttp.send();
+            }else if(action === "copy_images"){
+                xmlHttp.open("GET", "/images/copy", true);
+                xmlHttp.setRequestHeader("Content-type", "text/plain");
+                xmlHttp.send();
+            }else if(action === "list_faces"){
+                xmlHttp.open("GET", "/images/list", true);
+                xmlHttp.setRequestHeader("Content-type", "text/plain");
+                xmlHttp.send();
             }
         }
 
@@ -101,6 +109,10 @@
     	value='Health Check' />
     <input type='button' onclick='fetchQueryResult("job_status")'
     	value='Job Status' />
+    <input type='button' onclick='fetchQueryResult("copy_images")'
+    	value='Copy Images To Workspace' />
+    <input type='button' onclick='fetchQueryResult("list_faces")'
+    	value='List Faces in Workspace' />
 
     <p id='showData'></p>
 

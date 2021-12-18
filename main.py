@@ -9,26 +9,6 @@ app = Flask(__name__)
 faceClub = FaceClub("conf/config.yaml")
 
 logger = logging.getLogger('Scheduler')
-if faceClub.config.external_database_enable:
-    external_records = asyncio.run(faceClub.imageDatabase.unrecognizedFaces(100))
-
-faceClub.faceDatabase.dropSchema()
-faceClub.faceDatabase.initSchema()
-face = faceClub.faceDatabase.empty_face()
-face['faceId'] = 'id1'
-face['imageId'] = 'imageId1'
-face['sourcePath'] = '/url/path'
-face['imageYear'] = 2021
-faceClub.faceDatabase.insert_face(face)
-face2 = faceClub.faceDatabase.get_face('id1')
-print(face2)
-faces = faceClub.faceDatabase.get_faces(limit=faceClub.config.external_database_fetch_amount)
-print(faces)
-faceClub.fileMovement.cleanWorkspace()
-incoming_faces = faceClub.fileMovement.fromRepositoryToWorkspace(external_records)
-print(incoming_faces)
-faceClub.fileMovement.fromWorkspaceToPretrainDataset(incoming_faces)
-faceClub.fileMovement.backupDataset()
 
 def face_job():
     logger.info('job task started')
@@ -79,6 +59,18 @@ def start_job():
 @app.route("/job/list")
 def list_jobs():
     return to_json(faceClub.schedule.list())
+
+
+@app.route("/images/copy")
+def copy_images_to_workspace():
+    result, records = faceClub.fromRepositoryToWorkspace()
+    return to_json(records)
+
+
+@app.route("/images/list")
+def list_images_in_workspace():
+    records = faceClub.faceDatabase.get_faces(limit=faceClub.config.internal_database_display_amount)
+    return to_json(records)
 
 
 # Press the green button in the gutter to run the script.
