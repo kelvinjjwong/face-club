@@ -55,7 +55,6 @@ class FaceDatabase:
             'imageYear': row["imageYear"],
             'sample': row["sample"]
         }
-
         result.close()
         return face
 
