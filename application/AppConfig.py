@@ -1,4 +1,5 @@
 import os
+from os.path import exists
 import sys
 import yaml
 import logging
@@ -10,6 +11,7 @@ class AppConfig:
 
     config_file = ""
     external_database_config_file = ""
+    external_database_enable = False
     internal_database_url = ""
 
     logging_conf = {}
@@ -25,7 +27,9 @@ class AppConfig:
         logging.config.fileConfig('conf/logging.conf')
         self.logger = logging.getLogger('Config')
         self.logAllEnvVar()
+        self.ensureFileExist("database.external.config", self.external_database_config_file)
         self.load_external_database_config()
+        self.logger.info("external db enabled: %s" % self.external_database_enable)
         self.logger.info("workspace dataset: %s" % self.workspace("dataset"))
 
     def load(self):
@@ -33,8 +37,9 @@ class AppConfig:
             config = yaml.safe_load(f)
             self.logging_conf = self.realpath(config["logging"])
             self.workspace_conf = self.realpath(config["workspace"])
-            self.external_database_config_file = self.realpath(config["database"]["external"])
-            self.internal_database_url = self.realpath(config["database"]["internal-url"])
+            self.external_database_config_file = self.realpath(config["database"]["external"]["config"])
+            self.external_database_enable = config["database"]["external"]["enable"]
+            self.internal_database_url = self.realpath(config["database"]["internal"]["url"])
 
     def realpath(self, obj):
         if isinstance(obj, dict):
@@ -67,6 +72,11 @@ class AppConfig:
     def ensureEnvVar(self, key):
         if os.environ.get(key, "") == "":
             self.logger.error("System environment variable %s is not set" % key)
+            sys.exit(1)
+
+    def ensureFileExist(self, name, filepath):
+        if not exists(filepath):
+            self.logger.error("Config item [%s] file does not exist - %s" % (name, filepath))
             sys.exit(1)
 
     def logging(self, field):

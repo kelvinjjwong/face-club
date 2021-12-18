@@ -20,13 +20,16 @@ dependencies:
   - zlib=1.2.11=h1de35cc_3
   - pip:
     - apscheduler==3.8.1
+    - asyncio==3.4.3
+    - asyncpg==0.25.0
     - backports-zoneinfo==0.2.1
     - click==8.0.3
     - dlib==19.19.0
     - face-recognition==1.2.3
     - face-recognition-models==0.3.0
-    - freetype-py
     - flask==2.0.2
+    - freetype-py==2.2.0
+    - greenlet==1.1.2
     - importlib-metadata==4.8.2
     - imutils==0.5.1
     - itsdangerous==2.0.1
@@ -39,6 +42,7 @@ dependencies:
     - pytz-deprecation-shim==0.1.0.post0
     - pyyaml==6.0
     - six==1.16.0
+    - sqlalchemy==1.4.28
     - typing-extensions==4.0.1
     - tzdata==2021.5
     - tzlocal==4.1

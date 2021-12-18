@@ -8,7 +8,8 @@ import time
 faceClub = FaceClub("conf/config.yaml")
 
 logger = logging.getLogger('Scheduler')
-asyncio.run(faceClub.imageDatabase.unrecognizedFaces(100))
+if faceClub.config.external_database_enable:
+    asyncio.run(faceClub.imageDatabase.unrecognizedFaces(100))
 
 
 def face_job():
