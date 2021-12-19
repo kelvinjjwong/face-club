@@ -74,20 +74,36 @@ let tableFromJson = (arrayData) => {
         for (let j = 0; j < col.length; j++) {
             let tabCell = tr.insertCell(-1);
             let header = col[j];
-            let text = arrayData[i][col[j]];
+            let node = arrayData[i][col[j]];
             if (header === "actions") {
-                if(Array.isArray(text)){
-                    for (let k = 0; k < text.length; k++){
-                        let action = text[k];
+                if(Array.isArray(node)){
+                    for (let k = 0; k < node.length; k++){
+                        let action = node[k];
                         let button="<input type='button' onclick='"
                             + action["func"] +"(\""+ action["id"] +"\")' value='"+ action["func"] +"' />&nbsp;"
                         tabCell.innerHTML += button;
                     }
                 }else{
-                    tabCell.innerHTML = text;
+                    tabCell.innerHTML = node;
                 }
             } else {
-                tabCell.innerHTML = text;
+                if(typeof node === 'object' && node !== null) {
+                    let text = node["text"];
+                    let actions = node["actions"];
+                    if (text !== undefined && text !== null) {
+                        tabCell.innerHTML += text + "&nbsp;";
+                    }
+                    if (actions !== undefined && actions !== null && Array.isArray(actions)){
+                        for (let k = 0; k < actions.length; k++){
+                            let action = actions[k];
+                            let button="<input type='button' onclick='"
+                                + action["func"] +"(\""+ action["id"] +"\")' value='"+ action["func"] +"' />&nbsp;"
+                            tabCell.innerHTML += button;
+                        }
+                    }
+                }else{
+                    tabCell.innerHTML = node;
+                }
             }
         }
     }

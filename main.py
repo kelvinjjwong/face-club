@@ -64,6 +64,10 @@ def list_jobs():
             {
                 'func': 'stop_job',
                 'id': record["id"]
+            },
+            {
+                'func': 'resume_job',
+                'id': record["id"]
             }
         ]
     return to_json(records)
@@ -78,12 +82,38 @@ def copy_images_to_workspace():
 @app.route("/images/list")
 def list_images_in_workspace():
     records = faceClub.faceDatabase.get_faces(limit=faceClub.config.internal_database_display_amount)
+    for record in records:
+        record["sample"] = {
+            'text': record["sample"],
+            'actions': [
+                {
+                    'func': 'toggle_sample',
+                    'id': record["faceId"]
+                }
+            ]
+        }
+        record["scanWrong"] = {
+            'text': record["scanWrong"],
+            'actions': [
+                {
+                    'func': 'toggle_scan_result',
+                    'id': record["faceId"]
+                }
+            ]
+        }
     return to_json(records)
 
 
 @app.route("/dataset/backups")
 def list_dataset_backups():
     records = faceClub.fileMovement.get_dataset_backups()
+    for record in records:
+        record["actions"] = [
+            {
+                'func': 'use_dataset',
+                'id': record["backup_folder"]
+            }
+        ]
     return to_json(records)
 
 
