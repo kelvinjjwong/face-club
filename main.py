@@ -46,14 +46,14 @@ def job_status():
 def stop_job():
     faceClub.schedule.stop('face_job')
     logger.info("stopped schedule")
-    return to_json({'status': 'stopped'})
+    return list_jobs()
 
 
 @app.route("/job/start")
 def start_job():
     faceClub.schedule.resume('face_job')
     logger.info("started schedule")
-    return to_json({'status': 'started'})
+    return list_jobs()
 
 
 @app.route("/job/list")
@@ -67,6 +67,10 @@ def list_jobs():
             },
             {
                 'func': 'resume_job',
+                'id': record["id"]
+            },
+            {
+                'func': 'kill_job',
                 'id': record["id"]
             }
         ]
@@ -115,6 +119,19 @@ def list_dataset_backups():
             }
         ]
     return to_json(records)
+
+
+@app.route("/face/toggle/sample/<faceId>")
+def toggle_face_sample(faceId):
+    faceClub.faceDatabase.toggle_sample(faceId)
+    return list_images_in_workspace()
+
+
+@app.route("/face/toggle/scan/result/<faceId>")
+def toggle_face_scan_result(faceId):
+    faceClub.faceDatabase.toggle_scan_result(faceId)
+    return list_images_in_workspace()
+
 
 
 # Press the green button in the gutter to run the script.

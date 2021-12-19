@@ -4,4 +4,4 @@ def to_json(obj):
         .replace("'", "\"") \
         .replace("True", "true") \
         .replace("False", "false") \
-        .replace("None", "\"n/a\"")
+        .replace("None", "n/a")

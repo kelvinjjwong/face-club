@@ -1,21 +1,22 @@
 function stop_job(id) {
-    // TODO stop job
-    console.log("stop job: "+ id);
+    fetchQueryResult("stop_job")
+}
+
+function kill_job(id) {
+    // TODO kill job
+    console.log("kill job: "+ id)
 }
 
 function resume_job(id){
-    // TODO resume job
-    console.log("resume job: "+ id)
+    fetchQueryResult("resume_job")
 }
 
 function toggle_scan_result(id) {
-    // TODO toggle scan result
-    console.log("toggle scan result: "+ id)
+    fetchQueryResult("toggle_face_scan_result", id)
 }
 
 function toggle_sample(id){
-    // TODO toggle sample
-    console.log("toggle sample: "+ id)
+    fetchQueryResult("toggle_face_sample", id)
 }
 
 function use_dataset(backup_folder){

@@ -1,4 +1,4 @@
-let fetchQueryResult = (action) => {
+let fetchQueryResult = (action, id) => {
     const xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function () {
         if (xmlHttp.readyState === 4) {
@@ -36,6 +36,22 @@ let fetchQueryResult = (action) => {
         xmlHttp.send();
     }else if(action === "list_dataset_backups"){
         xmlHttp.open("GET", "/dataset/backups", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
+    }else if(action === "stop_job"){
+        xmlHttp.open("GET", "/job/stop", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
+    }else if(action === "resume_job"){
+        xmlHttp.open("GET", "/job/start", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
+    }else if(action === "toggle_face_sample"){
+        xmlHttp.open("GET", "/face/toggle/sample/" + id, true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
+    }else if(action === "toggle_face_scan_result"){
+        xmlHttp.open("GET", "/face/toggle/scan/result/" + id, true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
     }
