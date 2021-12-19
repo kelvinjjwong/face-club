@@ -94,7 +94,22 @@
 
                 for (let j = 0; j < col.length; j++) {
                     let tabCell = tr.insertCell(-1);
-                    tabCell.innerHTML = arrayData[i][col[j]];
+                    let header = col[j];
+                    let text = arrayData[i][col[j]];
+                    if (header === "actions") {
+                        if(Array.isArray(text)){
+                            for (let k = 0; k < text.length; k++){
+                                let action = text[k];
+                                let button="<input type='button' onclick='"
+                                    + action["func"] +"(\""+ action["id"] +"\")' value='"+ action["func"] +"' />&nbsp;"
+                                tabCell.innerHTML += button;
+                            }
+                        }else{
+                            tabCell.innerHTML = text;
+                        }
+                    } else {
+                        tabCell.innerHTML = text;
+                    }
                 }
             }
 
@@ -102,6 +117,12 @@
             const divShowData = document.getElementById('showData');
             divShowData.innerHTML = "";
             divShowData.appendChild(table);
+        }
+    </script>
+    <script>
+        function stop_job(id) {
+            // TODO stop job
+            console.log("stop job: "+ id);
         }
     </script>
 </head>

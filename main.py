@@ -58,7 +58,15 @@ def start_job():
 
 @app.route("/job/list")
 def list_jobs():
-    return to_json(faceClub.schedule.list())
+    records = faceClub.schedule.list()
+    for record in records:
+        record["actions"] = [
+            {
+                'func': 'stop_job',
+                'id': record["id"]
+            }
+        ]
+    return to_json(records)
 
 
 @app.route("/images/copy")
