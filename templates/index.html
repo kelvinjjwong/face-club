@@ -55,6 +55,10 @@
                 xmlHttp.open("GET", "/images/list", true);
                 xmlHttp.setRequestHeader("Content-type", "text/plain");
                 xmlHttp.send();
+            }else if(action === "list_dataset_backups"){
+                xmlHttp.open("GET", "/dataset/backups", true);
+                xmlHttp.setRequestHeader("Content-type", "text/plain");
+                xmlHttp.send();
             }
         }
 
@@ -113,6 +117,8 @@
     	value='Copy Images To Workspace' />
     <input type='button' onclick='fetchQueryResult("list_faces")'
     	value='List Faces in Workspace' />
+    <input type='button' onclick='fetchQueryResult("list_dataset_backups")'
+    	value='List Dataset Backups' />
 
     <p id='showData'></p>
 

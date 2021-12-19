@@ -73,6 +73,12 @@ def list_images_in_workspace():
     return to_json(records)
 
 
+@app.route("/dataset/backups")
+def list_dataset_backups():
+    records = faceClub.fileMovement.get_dataset_backups()
+    return to_json(records)
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80, debug=False)

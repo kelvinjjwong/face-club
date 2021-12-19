@@ -97,3 +97,16 @@ class FileMovement:
         shutil.move(folder, new_folder)
         os.makedirs(folder, exist_ok=True)
 
+    def get_dataset_backups(self):
+        backups = []
+        folder = os.path.realpath(self.workspace_conf["dataset"])
+        parent_folder = os.path.dirname(folder)
+        for filename in os.listdir(parent_folder):
+            file_path = os.path.join(parent_folder, filename)
+            if os.path.isdir(file_path) and filename.startswith("dataset_"):
+                backups.append({
+                    'backup_folder': filename,
+                    'last_modified_time': datetime.fromtimestamp(int(os.path.getmtime(file_path))).strftime("%Y-%m-%d %H:%M:%S")
+                })
+        return backups
+
