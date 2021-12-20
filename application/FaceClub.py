@@ -7,6 +7,7 @@ import sys
 import signal
 import asyncio
 
+from application import to_json
 from application.FaceRecognizer import FaceRecognizer
 from application.Workspace import Workspace
 from application.AppConfig import AppConfig
@@ -133,4 +134,51 @@ class FaceClub:
         self.workspace.isCopyingImagesToDataset = False
         # finally create a version backup
         self.workspace.backupDataset()
+        pass
+
+    def recognize_images(self, limit=10):
+        self.faceRecognizer.isRecognizing = True
+        model_file = self.workspace.get_model_file_path()
+        yield to_json({
+            "recognition_progress": "",
+            "peopleId": "",
+            "state": "STARTUP",
+            "face_file": "",
+            "source_file": ""
+        })
+        records = self.faceDatabase.get_faces(limit=limit)
+        yield to_json({
+            "recognition_progress": "0/{}".format(len(records)),
+            "peopleId": "",
+            "state": "COUNT",
+            "face_file": "",
+            "source_file": ""
+        })
+        i = 0
+        for record in records:
+            i += 1
+            yield to_json({
+                "recognition_progress": "{}/{}".format(i, len(records)),
+                "peopleId": "",
+                "state": "PROCESSING",
+                "face_file": "%s%s" % (record["faceId"], record["fileExt"]),
+                "source_file": record["sourcePath"]
+            })
+            file_path = self.workspace.get_image_file_path(record["faceId"], record["fileExt"])
+            people = self.faceRecognizer.recognize_image(model_file, file_path)
+            yield to_json({
+                "recognition_progress": "{}/{}".format(i, len(records)),
+                "peopleId": ",".join(people),
+                "state": "PROCESSED",
+                "face_file": "%s%s" % (record["faceId"], record["fileExt"]),
+                "source_file": record["sourcePath"]
+            })
+        yield to_json({
+            "recognition_progress": "",
+            "peopleId": "",
+            "state": "DONE",
+            "face_file": "",
+            "source_file": ""
+        })
+        self.faceRecognizer.isRecognizing = False
         pass

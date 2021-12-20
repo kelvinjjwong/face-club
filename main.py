@@ -245,43 +245,24 @@ def start_training():
             faceClub.faceRecognizer.training(dataset_folder, model_file, chunked_streaming=True),
             "text/html")
     else:
-        return to_json([{'training_status': 'not_ready_for_start_training'}])
+        return to_json({
+            'training_progress': '',
+            'peopleId': '',
+            'file': '',
+            'state': 'not_ready_for_start_training'
+        })
 
 
 @app.route("/recognition/start")
 def start_recognition():
     if faceClub.is_ready_for_start_recognition():
-        model_file = faceClub.workspace.get_model_file_path()
-
-        def generate():
-            yield to_json({
-                "training_progress": "STARTUP"
-            })
-            faceClub.faceRecognizer.isRecognizing = True
-            records = faceClub.faceDatabase.get_faces(limit=10)
-            yield to_json({
-                "training_progress": "TOTAL {}".format(len(records))
-            })
-            i = 0
-            for record in records:
-                i += 1
-                yield to_json({
-                    "training_progress": "PROCESSING {}/{}".format(i, len(records))
-                })
-                file_path = faceClub.workspace.get_image_file_path(record["faceId"], record["fileExt"])
-                faceClub.faceRecognizer.recognize(model_file, file_path)
-                yield to_json({
-                    "training_progress": "PROCESSED {}/{}".format(i, len(records))
-                })
-                pass
-            faceClub.faceRecognizer.isRecognizing = False
-            yield to_json({
-                "training_progress": "DONE"
-            })
-
-        return app.response_class(generate(), "text/html")
+        return app.response_class(
+            faceClub.recognize_images(limit=faceClub.config.internal_database_display_amount),
+            "text/html")
     else:
-        return to_json([{'training_status': 'not_ready_for_start_training'}])
+        return to_json({
+            'recognition_progress': 'not_ready_for_start_recognition'
+        })
 
 
 # Press the green button in the gutter to run the script.
