@@ -6,6 +6,7 @@ import atexit
 import sys
 import signal
 import asyncio
+import os
 
 from application import to_json
 from application.FaceRecognizer import FaceRecognizer
@@ -144,7 +145,11 @@ class FaceClub:
             "peopleId": "",
             "state": "STARTUP",
             "face_file": "",
-            "source_file": ""
+            "source_file": "",
+            "file_size_kb": 0,
+            "time_cost_sec": 0,
+            "pic_size": "",
+            "pic_channels": ""
         })
         records = self.faceDatabase.get_faces(limit=limit)
         yield to_json({
@@ -152,33 +157,59 @@ class FaceClub:
             "peopleId": "",
             "state": "COUNT",
             "face_file": "",
-            "source_file": ""
+            "source_file": "",
+            "file_size_kb": 0,
+            "time_cost_sec": 0,
+            "pic_size": "",
+            "pic_channels": ""
         })
         i = 0
-        for record in records:
+        folder = self.config.workspace_conf["images"]
+        files = os.listdir(folder)
+        for filename in files:
+            file_path = os.path.join(folder, filename)
+            _, extension = os.path.splitext(filename)
             i += 1
-            yield to_json({
-                "recognition_progress": "{}/{}".format(i, len(records)),
-                "peopleId": "",
-                "state": "PROCESSING",
-                "face_file": "%s%s" % (record["faceId"], record["fileExt"]),
-                "source_file": record["sourcePath"]
-            })
-            file_path = self.workspace.get_image_file_path(record["faceId"], record["fileExt"])
-            people = self.faceRecognizer.recognize_image(model_file, file_path)
-            yield to_json({
-                "recognition_progress": "{}/{}".format(i, len(records)),
-                "peopleId": ",".join(people),
-                "state": "PROCESSED",
-                "face_file": "%s%s" % (record["faceId"], record["fileExt"]),
-                "source_file": record["sourcePath"]
-            })
+            if os.path.isfile(file_path) and extension.lower() in ('.jpg', '.png', '.jpeg'):
+                #for record in records:
+                file_size = os.path.getsize(file_path) / 1024
+                yield to_json({
+                    "recognition_progress": "{}/{}".format(i, len(files)),
+                    "peopleId": "",
+                    "state": "PROCESSING",
+                    "face_file": file_path,
+                    "source_file": '',
+                    "file_size_kb": file_size,
+                    "time_cost_sec": 0,
+                    "pic_size": "",
+                    "pic_channels": ""
+                })
+                started = datetime.now()
+                #file_path = self.workspace.get_image_file_path(record["faceId"], record["fileExt"])
+                people, width, height, channels = self.faceRecognizer.recognize_image(model_file, file_path)
+                finished = datetime.now()
+                delta = (finished - started)
+                yield to_json({
+                    "recognition_progress": "{}/{}".format(i, len(files)),
+                    "peopleId": ",".join(people),
+                    "state": "PROCESSED",
+                    "face_file": file_path,
+                    "source_file": '',
+                    "file_size_kb": file_size,
+                    "time_cost_sec": delta.seconds,
+                    "pic_size": ("%s x %s" % (width, height)),
+                    "pic_channels": ("%s" % channels)
+                })
         yield to_json({
             "recognition_progress": "",
             "peopleId": "",
             "state": "DONE",
             "face_file": "",
-            "source_file": ""
+            "source_file": "",
+            "file_size_kb": 0,
+            "time_cost_sec": 0,
+            "pic_size": "",
+            "pic_channels": ""
         })
         self.faceRecognizer.isRecognizing = False
         pass

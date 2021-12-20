@@ -114,6 +114,7 @@ class FaceRecognizer:
 
         # load the input image and convert it from BGR to RGB
         image = cv2.imread(image)
+        width, height, channels = image.shape
         rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         # detect the (x, y)-coordinates of the bounding boxes corresponding
@@ -240,4 +241,4 @@ class FaceRecognizer:
             self.logger.info("Saved image to {}".format(output_path))
 
         self.logger.info("{} [INFO] DONE.".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
-        return names
+        return names, width, height, channels
