@@ -248,6 +248,42 @@ def start_training():
         return to_json([{'training_status': 'not_ready_for_start_training'}])
 
 
+@app.route("/recognition/start")
+def start_recognition():
+    if faceClub.is_ready_for_start_recognition():
+        model_file = faceClub.workspace.get_model_file_path()
+
+        def generate():
+            yield to_json({
+                "training_progress": "STARTUP"
+            })
+            faceClub.faceRecognizer.isRecognizing = True
+            records = faceClub.faceDatabase.get_faces(limit=10)
+            yield to_json({
+                "training_progress": "TOTAL {}".format(len(records))
+            })
+            i = 0
+            for record in records:
+                i += 1
+                yield to_json({
+                    "training_progress": "PROCESSING {}/{}".format(i, len(records))
+                })
+                file_path = faceClub.workspace.get_image_file_path(record["faceId"], record["fileExt"])
+                faceClub.faceRecognizer.recognize(model_file, file_path)
+                yield to_json({
+                    "training_progress": "PROCESSED {}/{}".format(i, len(records))
+                })
+                pass
+            faceClub.faceRecognizer.isRecognizing = False
+            yield to_json({
+                "training_progress": "DONE"
+            })
+
+        return app.response_class(generate(), "text/html")
+    else:
+        return to_json([{'training_status': 'not_ready_for_start_training'}])
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80, debug=False)

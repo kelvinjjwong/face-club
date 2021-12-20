@@ -108,7 +108,6 @@ class FaceRecognizer:
         pass
 
     def recognize(self, model, image, output_path=None, display=0, detection_method="cnn"):
-        self.isRecognizing = True
         # load the known faces and embeddings
         self.logger.info("Loading encoded pickle ...")
         data = pickle.loads(open(model, "rb").read())
@@ -240,8 +239,6 @@ class FaceRecognizer:
             self.logger.info("Saved image to {}".format(output_path))
 
         self.logger.info("{} [INFO] DONE.".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
-
-        self.isRecognizing = False
 
         # show the output image
         # check to see if we are supposed to display the image to

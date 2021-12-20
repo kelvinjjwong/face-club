@@ -256,3 +256,10 @@ class Workspace:
     def get_model_file_path(self):
         folder = os.path.realpath(self.workspace_conf["model"])
         return os.path.join(folder, "model.pickle")
+
+    def get_image_file_path(self, faceId, fileExt):
+        folder = os.path.realpath(self.workspace_conf["images"])
+        filename = ("%s%s" % (faceId, fileExt))
+        return os.path.join(folder, filename)
+
+
