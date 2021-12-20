@@ -57,11 +57,6 @@ class FaceDatabase:
         conn = self.engine.connect()
         conn.execute(self.faces.insert(), face)
 
-    def update_face(self, face):
-        self.logger.info("updating face record %s" % face)
-        conn = self.engine.connect()
-        conn.execute(self.faces.update(), face)
-
     def delete_face(self, face):
         self.logger.info("deleting face record %s" % face)
         conn = self.engine.connect()
@@ -94,6 +89,11 @@ class FaceDatabase:
         else:
             self.logger.error("face record not found: %s" % faceId)
             return None
+
+    def delete_all_faces(self):
+        self.logger.info("deleting all faces from face db")
+        conn = self.engine.connect()
+        conn.execute("DELETE FROM faces")
 
     def get_faces(self, limit=100, offset=0):
         self.logger.info("getting face records with limit=%s offset=%s" % (limit, offset))

@@ -7,6 +7,8 @@ from datetime import datetime
 class Workspace:
     logger = None
     workspace_conf = {}
+    isCopyingImagesToDataset = False
+    isCopyingImagesToWorkspace = False
 
     def __init__(self, workspace_conf):
         self.logger = logging.getLogger('FileMove')
@@ -30,6 +32,7 @@ class Workspace:
         return overall_result, volumes_dict
 
     def fromRepositoryToWorkspace(self, external_db_records):
+        self.isCopyingImagesToWorkspace = True
         rtn = []
         folder = self.workspace_conf["images"]
         for image in external_db_records:
@@ -53,9 +56,11 @@ class Workspace:
                 "scanWrong": False
             }
             rtn.append(rec)
+        self.isCopyingImagesToWorkspace = False
         return rtn
 
     def cleanWorkspace(self):
+        self.isCopyingImagesToWorkspace = True
         folder = self.workspace_conf["images"]
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
@@ -66,9 +71,11 @@ class Workspace:
                     shutil.rmtree(file_path)
             except Exception as e:
                 self.logger.error('Failed to delete %s. Reason: %s' % (file_path, e))
+        self.isCopyingImagesToWorkspace = False
         self.logger.info("Cleaned up workspace")
 
     def fromWorkspaceToPretrainDataset(self, internal_db_records):
+        self.isCopyingImagesToDataset = True
         source_folder = self.workspace_conf["images"]
         dataset = self.workspace_conf["dataset"]
         for face in internal_db_records:
@@ -82,6 +89,7 @@ class Workspace:
             self.logger.info("pretrain src: %s" % source_filename)
             self.logger.info("pretrain des: %s" % target_folder)
             shutil.copy(source_filename, target_folder)
+        self.isCopyingImagesToDataset = False
 
     def backupDataset(self):
         folder = os.path.realpath(self.workspace_conf["dataset"])
@@ -108,6 +116,41 @@ class Workspace:
         self.logger.info("mv to  : %s" % new_folder)
         shutil.move(folder, new_folder)
         os.makedirs(folder, exist_ok=True)
+
+    def is_ready_for_training(self):
+        files_in_dataset = self.list_dataset()
+        return len(files_in_dataset) > 0
+
+    def is_ready_for_recognition(self):
+        models = self.list_model()
+        images = self.list_images()
+        return len(models) > 0 and len(images) > 0
+
+    def list_model(self):
+        models = []
+        folder = os.path.realpath(self.workspace_conf["model"])
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            if os.path.isfile(file_path):
+                models.append({
+                    'file': file_path,
+                    'last_modified_time': datetime.fromtimestamp(int(os.path.getmtime(file_path)))
+                                                  .strftime("%Y-%m-%d %H:%M:%S")
+                })
+        return models
+
+    def list_images(self):
+        images = []
+        folder = os.path.realpath(self.workspace_conf["images"])
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            if os.path.isfile(file_path):
+                images.append({
+                    'file': file_path,
+                    'last_modified_time': datetime.fromtimestamp(int(os.path.getmtime(file_path)))
+                                                  .strftime("%Y-%m-%d %H:%M:%S")
+                })
+        return images
 
     def list_dataset(self):
         files = []

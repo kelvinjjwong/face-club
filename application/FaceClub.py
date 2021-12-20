@@ -83,7 +83,17 @@ class FaceClub:
         else:
             return "%d seconds %f ms" % (seconds, ms)
 
-    def fromRepositoryToWorkspace(self):
+    def is_ready_for_start_training(self):
+        return (not self.faceRecognizer.isTraining) \
+               and (not self.workspace.isCopyingImagesToDataset) \
+               and self.workspace.is_ready_for_training()
+
+    def is_ready_for_start_recognition(self):
+        return (not self.faceRecognizer.isRecognizing) \
+               and (not self.workspace.isCopyingImagesToWorkspace) \
+               and self.workspace.is_ready_for_recognition()
+
+    def fromRepositoryToWorkspace(self, recreate_db=False):
         if self.config.external_database_enable:
             self.workspace.cleanWorkspace()
             self.faceDatabase.dropSchema()
@@ -110,6 +120,9 @@ class FaceClub:
             return False, [msg]
 
     def fromRepositoryToDataset(self):
-        self.workspace.backupDataset()
+        self.workspace.isCopyingImagesToDataset = True
         # TODO copy images from external volumes
+        self.workspace.isCopyingImagesToDataset = False
+        # finally create a version backup
+        self.workspace.backupDataset()
         pass

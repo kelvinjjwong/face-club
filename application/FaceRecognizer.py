@@ -11,12 +11,15 @@ import logging
 
 class FaceRecognizer:
     logger = None
+    isTraining = False
+    isRecognizing = False
 
     def __init__(self):
         self.logger = logging.getLogger('FACE')
         pass
 
     def training(self, dataset, model, detection_method="cnn"):
+        self.isTraining = True
         # grab the paths to the input images in our dataset
         self.logger.info("STARTUP Quantifying faces...")
         imagePaths = list(paths.list_images(dataset))
@@ -65,9 +68,11 @@ class FaceRecognizer:
         f.write(pickle.dumps(data))
         f.close()
         self.logger.info("DONE")
+        self.isTraining = False
         pass
 
     def recognize(self, model, image, output_path=None, display=0, detection_method="cnn"):
+        self.isRecognizing = True
         # load the known faces and embeddings
         self.logger.info("Loading encoded pickle ...")
         data = pickle.loads(open(model, "rb").read())
@@ -200,10 +205,13 @@ class FaceRecognizer:
 
         self.logger.info("{} [INFO] DONE.".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
 
+        self.isRecognizing = False
+
         # show the output image
         # check to see if we are supposed to display the image to
         # the screen
         if display > 0:
             cv2.imshow("Image", image)
             cv2.waitKey(0)
+
         pass
