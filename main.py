@@ -201,6 +201,13 @@ def list_dataset_of_people(peopleId):
 @app.route("/model/list")
 def list_model():
     records = faceClub.workspace.list_model()
+    for record in records:
+        record["actions"] = [
+            {
+                'func': 'backup_model',
+                'id': ''
+            }
+        ]
     return to_json(records)
 
 

@@ -34,6 +34,10 @@ let streamQueryResult = (action, columns, id) => {
         xmlHttp.open("GET", "/training/start", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
+    }else if(action === "start_recognition"){
+        xmlHttp.open("GET", "/recognition/start", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
     }
 }
 
