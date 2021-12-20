@@ -20,8 +20,7 @@ function toggle_sample(id){
 }
 
 function use_dataset(backup_folder){
-    // TODO use dataset
-    console.log("use dataset backup folder: "+ backup_folder)
+    fetchQueryResult("use_dataset", backup_folder)
 }
 
 function dataset_of_people(peopleId){

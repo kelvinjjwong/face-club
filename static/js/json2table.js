@@ -1,3 +1,42 @@
+let streamQueryResult = (action, columns, id) => {
+    createChunkedTable(columns);
+    const xmlHttp = new XMLHttpRequest();
+    var last_response_index = 0;
+    xmlHttp.onprogress = function () {
+        let responseText = xmlHttp.responseText;
+        let current_response_index = responseText.length;
+
+        if (last_response_index !== current_response_index) {
+            var just_received = responseText.substring(last_response_index, current_response_index);
+            last_response_index = current_response_index;
+            var just_received_lines = just_received.replaceAll("}{", "}\n{").split("\n");
+            for (let i=0;i<just_received_lines.length;i++) {
+                let line = just_received_lines[i];
+                console.log(line);
+                addRowToChunkedTable(columns, line);
+            }
+        }
+    };
+    xmlHttp.onreadystatechange = function () {
+        if (xmlHttp.readyState === 4) {
+            if (xmlHttp.status < 300) {
+                console.log("stream done");
+                document.getElementById("msg").innerText = "Received data at "+ new Date().toLocaleString();
+            }else{
+                const data = xmlHttp.responseText;
+                document.getElementById("msg").innerText = data;
+            }
+        }
+    };
+
+    document.getElementById("msg").innerText = "Executing ...";
+    if(action === "start_training"){
+        xmlHttp.open("GET", "/training/start", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
+    }
+}
+
 let fetchQueryResult = (action, id) => {
     const xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function () {
@@ -34,6 +73,10 @@ let fetchQueryResult = (action, id) => {
         xmlHttp.open("GET", "/images/list", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
+    }else if(action === "use_dataset"){
+        xmlHttp.open("GET", "/dataset/use/"+ id, true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
     }else if(action === "list_dataset_files"){
         xmlHttp.open("GET", "/dataset/list", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
@@ -48,6 +91,10 @@ let fetchQueryResult = (action, id) => {
         xmlHttp.send();
     }else if(action === "list_dataset_backups"){
         xmlHttp.open("GET", "/dataset/backups", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
+    }else if(action === "list_model"){
+        xmlHttp.open("GET", "/model/list", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
     }else if(action === "list_model_backups"){
@@ -70,6 +117,44 @@ let fetchQueryResult = (action, id) => {
         xmlHttp.open("GET", "/face/toggle/scan/result/" + id, true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
+    }
+}
+
+let createChunkedTable = (columns) => {
+    // Create a table.
+    const table = document.createElement("table");
+    table.id = "chunkedTable";
+
+    // Create table header row.
+    let tr = table.insertRow(-1);                   // table row.
+
+    for (let i = 0; i < columns.length; i++) {
+        let th = document.createElement("th");      // table header.
+        th.innerHTML = columns[i];
+        tr.appendChild(th);
+    }
+
+    const divShowData = document.getElementById('showData');
+    divShowData.innerHTML = "";
+    divShowData.appendChild(table);
+}
+
+let addRowToChunkedTable = (columns, message) => {
+    let table = document.getElementById("chunkedTable");
+    let tr = table.insertRow(-1);
+
+    if (message[0] === "{") {
+        let json = JSON.parse(message);
+        for (let j = 0; j < columns.length; j++) {
+            let column = columns[j];
+            let tabCell = tr.insertCell(-1);
+            tabCell.innerText = json[column];
+        }
+    }else{
+        for (let j = 0; j < columns.length; j++) {
+            let tabCell = tr.insertCell(-1);
+            tabCell.innerText = message;
+        }
     }
 }
 

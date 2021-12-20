@@ -7,6 +7,7 @@ import os
 import numpy
 from PIL import Image, ImageFont, ImageDraw
 import logging
+from application import to_json
 
 
 class FaceRecognizer:
@@ -18,14 +19,28 @@ class FaceRecognizer:
         self.logger = logging.getLogger('FACE')
         pass
 
-    def training(self, dataset, model, detection_method="cnn"):
+    def training(self, dataset, model, detection_method="cnn", chunked_streaming=False):
         self.isTraining = True
         # grab the paths to the input images in our dataset
         self.logger.info("STARTUP Quantifying faces...")
+        yield to_json({
+            "state": "STARTUP",
+            "message": "Quantifying faces...",
+            "peopleId": "",
+            "training_progress": "",
+            "file": ""
+        })
         imagePaths = list(paths.list_images(dataset))
 
         total = len(imagePaths)
         self.logger.info("TOTAL {}".format(total))
+        yield to_json({
+            "state": "COUNT",
+            "message": "TOTAL {}".format(total),
+            "peopleId": "",
+            "training_progress": "0/{}".format(total),
+            "file": ""
+        })
 
         # initialize the list of known encodings and known names
         knownEncodings = []
@@ -37,9 +52,16 @@ class FaceRecognizer:
             name = imagePath.split(os.path.sep)[-2]
 
             self.logger.info("PROCESSING IMAGE {}/{} {}".format(
-                                                        i + 1,
-                                                        len(imagePaths),
-                                                        name))
+                i + 1,
+                len(imagePaths),
+                name))
+            yield to_json({
+                "state": "PROCESSING",
+                "message": "PROCESSING SAMPLE",
+                "peopleId": name,
+                "training_progress": "{}/{}".format(i+1, len(imagePaths)),
+                "file": imagePath
+            })
 
             # load the input image and convert it from RGB (OpenCV ordering)
             # to dlib ordering (RGB)
@@ -61,6 +83,13 @@ class FaceRecognizer:
                 knownEncodings.append(encoding)
                 knownNames.append(name)
 
+            yield to_json({
+                "state": "PROCESSED",
+                "message": "PROCESSED SAMPLE",
+                "peopleId": name,
+                "training_progress": "{}/{}".format(i+1, len(imagePaths)),
+                "file": imagePath
+            })
         # dump the facial encodings + names to disk
         self.logger.info("ENCODE Serializing encodings...")
         data = {"encodings": knownEncodings, "names": knownNames}
@@ -69,6 +98,13 @@ class FaceRecognizer:
         f.close()
         self.logger.info("DONE")
         self.isTraining = False
+        yield to_json({
+            "state": "DONE",
+            "message": "DONE",
+            "peopleId": "",
+            "training_progress": "",
+            "file": ""
+        })
         pass
 
     def recognize(self, model, image, output_path=None, display=0, detection_method="cnn"):

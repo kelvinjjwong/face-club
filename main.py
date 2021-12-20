@@ -1,14 +1,17 @@
 import asyncio
 import time
+import random
 import logging
+from datetime import datetime
 from application import FaceClub, to_json
+import flask
 from flask import Flask, render_template
 
 app = Flask(__name__)
 
 faceClub = FaceClub("conf/config.yaml")
 
-logger = logging.getLogger('Scheduler')
+logger = logging.getLogger('WebAPI')
 
 
 def face_job():
@@ -25,6 +28,49 @@ def face_job():
 
 
 faceClub.schedule.add('face_job', 5, face_job)
+
+
+@app.before_request
+def start_timing():
+    """ begins timing of single request """
+    started = datetime.now()
+
+    # put variables in app context (threadlocal for each request)
+    ctx = app.app_context()
+    flask.g.id = random.randint(1, 65535)
+    flask.g.started = started
+
+
+@app.after_request
+def set_response_headers(response):
+    """ Ensures no cache """
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
+
+@app.teardown_request
+def end_timing(error=None):
+    """ end timing of single request """
+    finished = datetime.now()
+
+    # retrieve params from request context
+    block_size = flask.request.args.get('block_size', default=1024, type=int)
+    nblocks = flask.request.args.get('nblocks', default=10, type=int)
+    sleep_ms = flask.request.args.get('sleep_ms', default=0, type=int)
+    use_static_data = flask.request.args.get('use_static_data', default=0, type=int)
+
+    # retrieve params from app context (threadlocal for each request)
+    id = flask.g.id
+    started = flask.g.started
+    delta = (finished - started)
+    milliseconds = delta.microseconds / 1000.0
+
+    # show final stats of request
+    logger.info("requestId={},method={},path={},nblocks={},block_size={},sleep_ms={},duration={}ms".format(
+        flask.g.id, flask.request.method, flask.request.path, nblocks, block_size, sleep_ms, milliseconds)
+    )
 
 
 @app.route("/")
@@ -121,6 +167,12 @@ def list_dataset_backups():
     return to_json(records)
 
 
+@app.route("/dataset/use/<folder>")
+def use_dataset(folder):
+    faceClub.workspace.useDataset(folder)
+    return to_json([{'use_dataset': 'done', 'dataset_version': folder}])
+
+
 @app.route("/dataset/list")
 def list_dataset_files():
     records = faceClub.workspace.list_dataset()
@@ -146,6 +198,12 @@ def list_dataset_of_people(peopleId):
     return to_json(records)
 
 
+@app.route("/model/list")
+def list_model():
+    records = faceClub.workspace.list_model()
+    return to_json(records)
+
+
 @app.route("/model/backups")
 def list_model_backups():
     records = faceClub.workspace.get_model_backups()
@@ -153,7 +211,7 @@ def list_model_backups():
         record["actions"] = [
             {
                 'func': 'use_model',
-                'id': record["backup_folder"]
+                'id': record["backup_model"]
             }
         ]
     return to_json(records)
@@ -169,6 +227,18 @@ def toggle_face_sample(faceId):
 def toggle_face_scan_result(faceId):
     faceClub.faceDatabase.toggle_scan_result(faceId)
     return list_images_in_workspace()
+
+
+@app.route("/training/start")
+def start_training():
+    if faceClub.is_ready_for_start_training():
+        dataset_folder = faceClub.workspace.workspace_conf["dataset"]
+        model_file = faceClub.workspace.get_model_file_path()
+        return app.response_class(
+            faceClub.faceRecognizer.training(dataset_folder, model_file, chunked_streaming=True),
+            "text/html")
+    else:
+        return to_json([{'training_status': 'not_ready_for_start_training'}])
 
 
 # Press the green button in the gutter to run the script.

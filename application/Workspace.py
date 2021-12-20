@@ -2,6 +2,7 @@ import logging
 import os
 import shutil
 from datetime import datetime
+from distutils.dir_util import copy_tree
 
 
 class Workspace:
@@ -74,6 +75,21 @@ class Workspace:
         self.isCopyingImagesToWorkspace = False
         self.logger.info("Cleaned up workspace")
 
+    def cleanDataset(self):
+        self.isCopyingImagesToDataset = True
+        folder = self.workspace_conf["dataset"]
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                self.logger.error('Failed to delete %s. Reason: %s' % (file_path, e))
+        self.isCopyingImagesToDataset = False
+        self.logger.info("Cleaned up dataset")
+
     def fromWorkspaceToPretrainDataset(self, internal_db_records):
         self.isCopyingImagesToDataset = True
         source_folder = self.workspace_conf["images"]
@@ -104,6 +120,18 @@ class Workspace:
         shutil.move(folder, new_folder)
         os.makedirs(folder, exist_ok=True)
 
+    def useDataset(self, folder_name):
+        self.cleanDataset()
+        self.isCopyingImagesToDataset = True
+        folder = os.path.realpath(self.workspace_conf["dataset"])
+        parent_folder = os.path.dirname(folder)
+        new_folder = os.path.join(parent_folder, folder_name)
+        self.logger.info("mv from: %s" % new_folder)
+        self.logger.info("mv to  : %s" % folder)
+        copy_tree(new_folder, folder)
+        self.isCopyingImagesToDataset = False
+        self.logger.info("replaced dataset")
+
     def backupModel(self):
         folder = os.path.realpath(self.workspace_conf["model"])
         parent_folder = os.path.dirname(folder)
@@ -131,7 +159,7 @@ class Workspace:
         folder = os.path.realpath(self.workspace_conf["model"])
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
-            if os.path.isfile(file_path):
+            if os.path.isfile(file_path) and filename.startswith("model."):
                 models.append({
                     'file': file_path,
                     'last_modified_time': datetime.fromtimestamp(int(os.path.getmtime(file_path)))
@@ -188,7 +216,8 @@ class Workspace:
         folder_path = os.path.join(folder, peopleId)
         for filename in os.listdir(folder_path):
             file_path = os.path.join(folder_path, filename)
-            if os.path.isfile(file_path):
+            _, extension = os.path.splitext(filename)
+            if os.path.isfile(file_path) and extension.lower() in ('.jpg', '.png', '.jpeg'):
                 files.append({
                     'peopleId': peopleId,
                     'file': file_path,
@@ -214,13 +243,16 @@ class Workspace:
     def get_model_backups(self):
         backups = []
         folder = os.path.realpath(self.workspace_conf["model"])
-        parent_folder = os.path.dirname(folder)
-        for filename in os.listdir(parent_folder):
-            file_path = os.path.join(parent_folder, filename)
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
             if os.path.isdir(file_path) and filename.startswith("model_"):
                 backups.append({
-                    'backup_folder': filename,
+                    'backup_model': filename,
                     'last_modified_time': datetime.fromtimestamp(int(os.path.getmtime(file_path)))
                                                   .strftime("%Y-%m-%d %H:%M:%S")
                 })
         return backups
+
+    def get_model_file_path(self):
+        folder = os.path.realpath(self.workspace_conf["model"])
+        return os.path.join(folder, "model.pickle")

@@ -86,12 +86,20 @@ class FaceClub:
     def is_ready_for_start_training(self):
         return (not self.faceRecognizer.isTraining) \
                and (not self.workspace.isCopyingImagesToDataset) \
-               and self.workspace.is_ready_for_training()
+               and self.workspace.is_ready_for_training() \
+               and not self.faceRecognizer.isRecognizing
 
     def is_ready_for_start_recognition(self):
         return (not self.faceRecognizer.isRecognizing) \
                and (not self.workspace.isCopyingImagesToWorkspace) \
-               and self.workspace.is_ready_for_recognition()
+               and self.workspace.is_ready_for_recognition() \
+               and not self.faceRecognizer.isTraining
+
+    def should_stop_training(self):
+        return self.faceRecognizer.isRecognizing or self.workspace.isCopyingImagesToDataset
+
+    def should_stop_recognition(self):
+        return self.faceRecognizer.isTraining or self.workspace.isCopyingImagesToWorkspace
 
     def fromRepositoryToWorkspace(self, recreate_db=False):
         if self.config.external_database_enable:

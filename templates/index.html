@@ -27,12 +27,17 @@
     	value='List Dataset Files' />
     <input type='button' onclick='fetchQueryResult("list_dataset_backups")'
     	value='List Dataset Backups' />
+    <input type='button' onclick='fetchQueryResult("list_model")'
+    	value='List Model' />
     <input type='button' onclick='fetchQueryResult("list_model_backups")'
     	value='List Model Backups' />
+    <input type='button' onclick='streamQueryResult("start_training", ["training_progress", "peopleId", "state", "file"])'
+    	value='Start Training' />
+
+    <p id='msg'></p>
 
     <p id='showData'></p>
 
-    <p id='msg'></p>
 </body>
 
 </html>
