@@ -8,7 +8,7 @@ import signal
 import asyncio
 
 from application.FaceRecognizer import FaceRecognizer
-from application.FileMovement import FileMovement
+from application.Workspace import Workspace
 from application.AppConfig import AppConfig
 from application.FaceDatabase import FaceDatabase
 from application.ImageDatabase import ImageDatabase
@@ -22,7 +22,7 @@ class FaceClub:
     schedule = None
     imageDatabase = None
     faceDatabase = None
-    fileMovement = None
+    workspace = None
     faceRecognizer = None
 
     app_start_time = None
@@ -37,7 +37,7 @@ class FaceClub:
         self.logger = logging.getLogger('App')
         self.faceDatabase = FaceDatabase(self.config.internal_database_url)
         self.imageDatabase = ImageDatabase(self.config.database_conf)
-        self.fileMovement = FileMovement(self.config.workspace_conf)
+        self.workspace = Workspace(self.config.workspace_conf)
         self.faceRecognizer = FaceRecognizer()
         self.schedule = Schedule()
         self.schedule.start()
@@ -85,11 +85,11 @@ class FaceClub:
 
     def fromRepositoryToWorkspace(self):
         if self.config.external_database_enable:
-            self.fileMovement.cleanWorkspace()
+            self.workspace.cleanWorkspace()
             self.faceDatabase.dropSchema()
             self.faceDatabase.initSchema()
             external_records = asyncio.run(self.imageDatabase.unrecognizedFaces(100))
-            all_mounted, volumes = self.fileMovement.check_mount_point(external_records)
+            all_mounted, volumes = self.workspace.check_mount_point(external_records)
             if not all_mounted:
                 msg = "External volume is not mounted. Operation aborted."
                 self.logger.error(msg)
@@ -98,7 +98,7 @@ class FaceClub:
             else:
                 self.logger.info(volumes)
                 self.logger.info("External volume is mounted.")
-            incoming_faces = self.fileMovement.fromRepositoryToWorkspace(external_records)
+            incoming_faces = self.workspace.fromRepositoryToWorkspace(external_records)
             for face in incoming_faces:
                 self.faceDatabase.insert_face(face)
             msg = "Processed %s face records" % len(incoming_faces)
@@ -109,7 +109,7 @@ class FaceClub:
             self.logger.info(msg)
             return False, [msg]
 
-    def preparePretrainDataset(self):
-        self.fileMovement.backupDataset()
+    def fromRepositoryToDataset(self):
+        self.workspace.backupDataset()
         # TODO copy images from external volumes
         pass

@@ -4,7 +4,7 @@ import shutil
 from datetime import datetime
 
 
-class FileMovement:
+class Workspace:
     logger = None
     workspace_conf = {}
 
@@ -28,7 +28,6 @@ class FileMovement:
             volumes_dict[volume] = ex
             overall_result = overall_result & ex
         return overall_result, volumes_dict
-
 
     def fromRepositoryToWorkspace(self, external_db_records):
         rtn = []
@@ -76,7 +75,7 @@ class FileMovement:
             peopleId = face["peopleIdAssign"] if face["peopleId"] == "Unknown" else face["peopleId"]
             if peopleId == "Unknown":
                 continue
-                #pass
+                # pass
             filename = ("%s%s" % (face["faceId"], face["fileExt"]))
             source_filename = os.path.join(source_folder, filename)
             target_folder = os.path.join(dataset, peopleId, filename)
@@ -97,6 +96,64 @@ class FileMovement:
         shutil.move(folder, new_folder)
         os.makedirs(folder, exist_ok=True)
 
+    def backupModel(self):
+        folder = os.path.realpath(self.workspace_conf["model"])
+        parent_folder = os.path.dirname(folder)
+        folder_name = os.path.basename(folder)
+        now = datetime.now()
+        dt = now.strftime("%Y-%m-%d_%H-%M-%S")
+        new_folder_name = ("%s_%s" % (folder_name, dt))
+        new_folder = os.path.join(parent_folder, new_folder_name)
+        self.logger.info("mv from: %s" % folder)
+        self.logger.info("mv to  : %s" % new_folder)
+        shutil.move(folder, new_folder)
+        os.makedirs(folder, exist_ok=True)
+
+    def list_dataset(self):
+        files = []
+        folder = os.path.realpath(self.workspace_conf["dataset"])
+        for sub_folder in os.listdir(folder):
+            sub_folder_path = os.path.join(folder, sub_folder)
+            if os.path.isdir(sub_folder_path):
+                for filename in os.listdir(sub_folder_path):
+                    file_path = os.path.join(sub_folder_path, filename)
+                    if os.path.isfile(file_path):
+                        files.append({
+                            'peopleId': sub_folder,
+                            'file': file_path,
+                            'last_modified_time': datetime.fromtimestamp(int(os.path.getmtime(file_path)))
+                                                          .strftime("%Y-%m-%d %H:%M:%S")
+                        })
+        return files
+
+    def list_dataset_people(self):
+        datasets = []
+        folder = os.path.realpath(self.workspace_conf["dataset"])
+        for sub_folder in os.listdir(folder):
+            sub_folder_path = os.path.join(folder, sub_folder)
+            if os.path.isdir(sub_folder_path):
+                datasets.append({
+                    'peopleId': sub_folder,
+                    'last_modified_time': datetime.fromtimestamp(int(os.path.getmtime(sub_folder_path)))
+                                                  .strftime("%Y-%m-%d %H:%M:%S")
+                })
+        return datasets
+
+    def list_dataset_of_people(self, peopleId):
+        files = []
+        folder = os.path.realpath(self.workspace_conf["dataset"])
+        folder_path = os.path.join(folder, peopleId)
+        for filename in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, filename)
+            if os.path.isfile(file_path):
+                files.append({
+                    'peopleId': peopleId,
+                    'file': file_path,
+                    'last_modified_time': datetime.fromtimestamp(int(os.path.getmtime(file_path)))
+                        .strftime("%Y-%m-%d %H:%M:%S")
+                })
+        return files
+
     def get_dataset_backups(self):
         backups = []
         folder = os.path.realpath(self.workspace_conf["dataset"])
@@ -106,7 +163,21 @@ class FileMovement:
             if os.path.isdir(file_path) and filename.startswith("dataset_"):
                 backups.append({
                     'backup_folder': filename,
-                    'last_modified_time': datetime.fromtimestamp(int(os.path.getmtime(file_path))).strftime("%Y-%m-%d %H:%M:%S")
+                    'last_modified_time': datetime.fromtimestamp(int(os.path.getmtime(file_path)))
+                                                  .strftime("%Y-%m-%d %H:%M:%S")
                 })
         return backups
 
+    def get_model_backups(self):
+        backups = []
+        folder = os.path.realpath(self.workspace_conf["model"])
+        parent_folder = os.path.dirname(folder)
+        for filename in os.listdir(parent_folder):
+            file_path = os.path.join(parent_folder, filename)
+            if os.path.isdir(file_path) and filename.startswith("model_"):
+                backups.append({
+                    'backup_folder': filename,
+                    'last_modified_time': datetime.fromtimestamp(int(os.path.getmtime(file_path)))
+                                                  .strftime("%Y-%m-%d %H:%M:%S")
+                })
+        return backups

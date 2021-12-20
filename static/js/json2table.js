@@ -34,8 +34,24 @@ let fetchQueryResult = (action, id) => {
         xmlHttp.open("GET", "/images/list", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
+    }else if(action === "list_dataset_files"){
+        xmlHttp.open("GET", "/dataset/list", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
+    }else if(action === "list_dataset_people"){
+        xmlHttp.open("GET", "/dataset/people", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
+    }else if(action === "list_dataset_of_people"){
+        xmlHttp.open("GET", "/dataset/list/people/" + id, true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
     }else if(action === "list_dataset_backups"){
         xmlHttp.open("GET", "/dataset/backups", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
+    }else if(action === "list_model_backups"){
+        xmlHttp.open("GET", "/model/backups", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
     }else if(action === "stop_job"){

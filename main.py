@@ -10,6 +10,7 @@ faceClub = FaceClub("conf/config.yaml")
 
 logger = logging.getLogger('Scheduler')
 
+
 def face_job():
     logger.info('job task started')
     seconds = 15
@@ -24,7 +25,6 @@ def face_job():
 
 
 faceClub.schedule.add('face_job', 5, face_job)
-
 
 
 @app.route("/")
@@ -110,11 +110,49 @@ def list_images_in_workspace():
 
 @app.route("/dataset/backups")
 def list_dataset_backups():
-    records = faceClub.fileMovement.get_dataset_backups()
+    records = faceClub.workspace.get_dataset_backups()
     for record in records:
         record["actions"] = [
             {
                 'func': 'use_dataset',
+                'id': record["backup_folder"]
+            }
+        ]
+    return to_json(records)
+
+
+@app.route("/dataset/list")
+def list_dataset_files():
+    records = faceClub.workspace.list_dataset()
+    return to_json(records)
+
+
+@app.route("/dataset/people")
+def list_dataset_people():
+    records = faceClub.workspace.list_dataset_people()
+    for record in records:
+        record["actions"] = [
+            {
+                'func': 'dataset_of_people',
+                'id': record["peopleId"]
+            }
+        ]
+    return to_json(records)
+
+
+@app.route("/dataset/list/people/<peopleId>")
+def list_dataset_of_people(peopleId):
+    records = faceClub.workspace.list_dataset_of_people(peopleId)
+    return to_json(records)
+
+
+@app.route("/model/backups")
+def list_model_backups():
+    records = faceClub.workspace.get_model_backups()
+    for record in records:
+        record["actions"] = [
+            {
+                'func': 'use_model',
                 'id': record["backup_folder"]
             }
         ]
@@ -131,7 +169,6 @@ def toggle_face_sample(faceId):
 def toggle_face_scan_result(faceId):
     faceClub.faceDatabase.toggle_scan_result(faceId)
     return list_images_in_workspace()
-
 
 
 # Press the green button in the gutter to run the script.

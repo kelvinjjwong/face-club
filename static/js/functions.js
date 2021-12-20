@@ -23,3 +23,7 @@ function use_dataset(backup_folder){
     // TODO use dataset
     console.log("use dataset backup folder: "+ backup_folder)
 }
+
+function dataset_of_people(peopleId){
+    fetchQueryResult("list_dataset_of_people", peopleId)
+}
