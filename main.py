@@ -29,7 +29,7 @@ def face_job():
 
 
 faceClub.schedule.add('face_job', 5, face_job)
-
+faceClub.schedule.stop('face_job')
 
 @app.before_request
 def start_timing():

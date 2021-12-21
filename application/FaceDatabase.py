@@ -1,12 +1,14 @@
-from sqlalchemy import Table, Column, Integer, String, Text, Boolean, MetaData, ForeignKey
+from sqlalchemy import Table, Column, Integer, String, Text, Boolean, MetaData, ForeignKey, and_
 from sqlalchemy import create_engine
 from sqlalchemy.sql import select
 import logging
+
 
 class FaceDatabase:
     logger = None
     engine = None
     faces = None
+    positions = None
     metadata = None
 
     def __init__(self, url):
@@ -27,6 +29,17 @@ class FaceDatabase:
                            Column("scanned", Boolean),
                            Column("scanWrong", Boolean)
                            )
+        self.positions = Table('positions', self.metadata,
+                               Column("imageId", String(50)),
+                               Column("pos_top", String(50)),
+                               Column("pos_right", String(50)),
+                               Column("pos_bottom", String(50)),
+                               Column("pos_left", String(50)),
+                               Column("peopleIdRecognized", String(50)),
+                               Column("peopleIdAssign", String(50)),
+                               Column("peopleId", String(50)),
+                               Column("peopleName", String(50))
+                               )
 
     def initSchema(self):
         self.metadata.create_all(self.engine)
@@ -37,24 +50,10 @@ class FaceDatabase:
         conn.execute("""
         DROP TABLE IF EXISTS faces
         """)
+        conn.execute("""
+        DROP TABLE IF EXISTS positions
+        """)
         self.logger.info("Dropped face db schema")
-
-
-    def empty_face(self):
-        return {
-            'imageId': '',
-            'sourcePath': '',
-            'localFilePath': '',
-            'taggedFilePath': '',
-            'fileExt': '',
-            'peopleId': 'Unknown',
-            'peopleIdRecognized': 'Unknown',
-            'peopleIdAssign': 'Unknown',
-            'imageYear': 0,
-            'sample': False,
-            'scanned': False,
-            'scanWrong': False
-        }
 
     def insert_face(self, face):
         self.logger.info("inserting image record %s" % face)
@@ -183,14 +182,14 @@ class FaceDatabase:
         conn = self.engine.connect()
         face = self.get_face(imageId, conn=conn)
         if face is not None:
-            u = self.faces.update()\
-                .where(self.faces.c.imageId == imageId)\
+            u = self.faces.update() \
+                .where(self.faces.c.imageId == imageId) \
                 .values(
-                    localFilePath=localFilePath,
-                    taggedFilePath=taggedFilePath,
-                    peopleIdRecognized=peopleIdRecognized,
-                    scanned=1
-                )
+                localFilePath=localFilePath,
+                taggedFilePath=taggedFilePath,
+                peopleIdRecognized=peopleIdRecognized,
+                scanned=1
+            )
             print(u.compile(compile_kwargs={"literal_binds": True}))
             conn.execute(u)
             self.logger.info("updated image with imageId=%s" % imageId)
@@ -204,11 +203,85 @@ class FaceDatabase:
             u = self.faces.update() \
                 .where(self.faces.c.imageId == imageId) \
                 .values(
-                    peopleIdAssign=peopleIdAssign
-                )
+                peopleIdAssign=peopleIdAssign
+            )
             print(u.compile(compile_kwargs={"literal_binds": True}))
             conn.execute(u)
             self.logger.info("updated image with imageId=%s scanWrong=%s" % (imageId, face['scanWrong']))
         else:
             self.logger.error("image record not found: %s" % imageId)
 
+    def get_position(self, imageId: str, top: int, right: int, bottom: int, left: int, conn=None):
+        self.logger.info("getting position record: imageId=%s top=%s right=%s bottom=%s left=%s"
+                         % (imageId, top, right, bottom, left))
+        if conn is None:
+            conn = self.engine.connect()
+        s = select(self.positions).where(
+            and_(
+                self.positions.c.imageId == imageId,
+                self.positions.c.pos_top == top,
+                self.positions.c.pos_right == right,
+                self.positions.c.pos_bottom == bottom,
+                self.positions.c.pos_left == left
+            )
+        )
+        print(s.compile(compile_kwargs={"literal_binds": True}))
+        result = conn.execute(s)
+        row = result.fetchone()
+        if row is not None:
+            position = {
+                'imageId': row["imageId"],
+                'pos_top': row["pos_top"],
+                'pos_right': row["pos_right"],
+                'pos_bottom': row["pos_bottom"],
+                'pos_left': row["pos_left"],
+                'peopleIdRecognized': row["peopleIdRecognized"],
+                'peopleIdAssign': row["peopleIdAssign"],
+                'peopleId': row["peopleId"],
+                'peopleName': row["peopleName"]
+            }
+            self.logger.info(position)
+            result.close()
+            return position
+        else:
+            self.logger.error("position record not found: imageId=%s top=%s right=%s bottom=%s left=%s"
+                              % (imageId, top, right, bottom, left))
+            return None
+
+    def insert_position(self, position):
+        self.logger.info("inserting position record %s" % position)
+        conn = self.engine.connect()
+        conn.execute(self.positions.insert(), position)
+
+    def update_position(self, imageId: str, top: int, right: int, bottom: int, left: int,
+                        peopleIdRecognized: str, peopleIdAssign: str):
+        peopleId = ''
+        if peopleIdAssign != '':
+            peopleId = peopleIdAssign
+        elif peopleIdRecognized != '':
+            peopleId = peopleIdRecognized
+
+        # TODO map name to peopleId
+        peopleName = ''
+
+        conn = self.engine.connect()
+        position = self.get_position(imageId, top, right, bottom, left, conn=conn)
+        if position is not None:
+            conn.execute("""
+            UPDATE positions SET peopleIdRecognized=$1, peopleIdAssign=$2, peopleId=$3, peopleName=$4
+            WHERE imageId=$5 AND pos_top=$6 AND pos_right=$7 AND pos_bottom=$8 AND pos_left=$9
+                    """, peopleIdRecognized, peopleIdAssign, peopleId, peopleName, imageId, top, right, bottom, left)
+            self.logger.info("updated position with imageId=%s top=%s right=%s bottom=%s left=%s"
+                             % (imageId, top, right, bottom, left))
+        else:
+            self.insert_position({
+                'imageId': imageId,
+                'pos_top': top,
+                'pos_right': right,
+                'pos_bottom': bottom,
+                'pos_left': left,
+                'peopleIdRecognized': peopleIdRecognized,
+                'peopleIdAssign': peopleIdAssign,
+                'peopleId': peopleId,
+                'peopleName': peopleName
+            })

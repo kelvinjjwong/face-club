@@ -186,6 +186,17 @@ class FaceRecognizer:
             # update the list of names
             names.append(name)
 
+        positions = []
+        for ((top, right, bottom, left), name) in zip(boxes, names):
+            positions.append({
+                'top': top,
+                'right': right,
+                'bottom': bottom,
+                'left': left,
+                'peopleId': name
+            })
+            self.logger.info("top=%s right=%s bottom=%s left=%s name=%s" % (top, right, bottom, left, name))
+
         self.logger.info("Recognition result: %s - %s" % (image_file, names))
 
         out_file_path = ""
@@ -270,4 +281,4 @@ class FaceRecognizer:
             cv2.imwrite(out_file_path, image)
             self.logger.info("Saved tagged image to {}".format(out_file_path))
 
-        return names, width, height, out_file_path
+        return names, positions, width, height, out_file_path
