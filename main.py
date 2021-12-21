@@ -153,6 +153,10 @@ def list_images_in_workspace():
                 {
                     'func': 'view',
                     'id': record["taggedFilePath"]
+                },
+                {
+                    'func': 'canvas',
+                    'id': record["taggedFilePath"]
                 }
             ]
         }
@@ -199,6 +203,10 @@ def list_scanned_faces_in_workspace():
             'actions': [
                 {
                     'func': 'view',
+                    'id': record["taggedFilePath"]
+                },
+                {
+                    'func': 'canvas',
                     'id': record["taggedFilePath"]
                 }
             ]
@@ -374,6 +382,18 @@ def download_file():
     folder_path = os.path.dirname(file_path)
     return send_from_directory(folder_path, filename, as_attachment=False)
 
+
+@app.route("/canvas")
+def canvas():
+    file_path = request.args.get('file')
+    if file_path != '':
+        filename = os.path.basename(file_path)
+        prefix, extension = os.path.splitext(filename)
+        imageId = prefix.replace("_faces", "")
+        positions = faceClub.faceDatabase.get_positions(imageId)
+        return render_template("canvas.html", file_path=file_path, positions=positions)
+    else:
+        return render_template("404.html")
 
 
 # Press the green button in the gutter to run the script.

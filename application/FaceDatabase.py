@@ -285,3 +285,25 @@ class FaceDatabase:
                 'peopleId': peopleId,
                 'peopleName': peopleName
             })
+
+    def get_positions(self, imageId, conn=None):
+        positions = []
+        if conn is None:
+            conn = self.engine.connect()
+        s = select(self.positions).where(self.positions.c.imageId == imageId)
+        print(s.compile(compile_kwargs={"literal_binds": True}))
+        result = conn.execute(s)
+        for imageId, pos_top, pos_right, pos_bottom, pos_left, peopleIdRecognized, peopleIdAssign, peopleId, peopleName in result:
+            position = {
+                'imageId': imageId,
+                'pos_top': pos_top,
+                'pos_right': pos_right,
+                'pos_bottom': pos_bottom,
+                'pos_left': pos_left,
+                'peopleIdRecognized': peopleIdRecognized,
+                'peopleIdAssign': peopleIdAssign,
+                'peopleId': peopleId,
+                'peopleName': peopleName
+            }
+            positions.append(position)
+        return positions

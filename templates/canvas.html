@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Canvas</title>
+    <style>
+        body {
+            margin: 0px;
+        }
+        #canvas {
+            width:2000px;
+            height:2000px;
+            border: 0px solid transparent;
+        }
+        .rectangle {
+            border: 1px solid #FF0000;
+            position: absolute;
+        }
+    </style>
+    <script>
+        let datas = [];
+    {% for position in positions %}
+        {
+            const item = new Object();
+            item.pos_top = {{ position.pos_top }};
+            item.pos_right = {{ position.pos_right }};
+            item.pos_bottom = {{ position.pos_bottom }};
+            item.pos_left = {{ position.pos_left }};
+            item.peopleIdRecognized = '{{ position.peopleIdRecognized }}';
+            item.peopleIdAssign = '{{ position.peopleIdAssign }}';
+            item.peopleId = '{{ position.peopleId }}';
+            item.peopleName = '{{ position.peopleName }}';
+            datas.push(item);
+        }
+    {% endfor %}
+
+        function inBox(x, y) {
+            for(var i=0;i<datas.length;i++){
+                let position = datas[i];
+                if(x >= position.pos_left && x <= position.pos_right && y >= position.pos_top && y <= position.pos_bottom) {
+                    position.idx = i;
+                    return position;
+                }
+            }
+            return null;
+        }
+
+        function initDraw(canvas) {
+            function setMousePosition(e) {
+                var ev = e || window.event; //Moz || IE
+                if (ev.pageX) { //Moz
+                    mouse.x = ev.pageX + window.pageXOffset;
+                    mouse.y = ev.pageY + window.pageYOffset;
+                } else if (ev.clientX) { //IE
+                    mouse.x = ev.clientX + document.body.scrollLeft;
+                    mouse.y = ev.clientY + document.body.scrollTop;
+                }
+                let obj = inBox(mouse.x, mouse.y);
+                if(obj != null){
+                    console.log("it's "+ obj.idx + " - " + obj.peopleIdRecognized + " - " + obj.peopleId + " - " + obj.peopleName);
+                }
+            };
+
+            var mouse = {
+                x: 0,
+                y: 0,
+                startX: 0,
+                startY: 0
+            };
+            var element = null;
+
+            canvas.addEventListener('mousemove', function (e) {
+                setMousePosition(e);
+                if (element !== null) {
+                    element.style.width = Math.abs(mouse.x - mouse.startX) + 'px';
+                    element.style.height = Math.abs(mouse.y - mouse.startY) + 'px';
+                    element.style.left = (mouse.x - mouse.startX < 0) ? mouse.x + 'px' : mouse.startX + 'px';
+                    element.style.top = (mouse.y - mouse.startY < 0) ? mouse.y + 'px' : mouse.startY + 'px';
+                }
+            });
+
+            canvas.onclick = function (e) {
+                if (element !== null) {
+                    element = null;
+                    canvas.style.cursor = "default";
+                    console.log("finsihed.");
+                } else {
+                    console.log("begun.");
+                    mouse.startX = mouse.x;
+                    mouse.startY = mouse.y;
+                    element = document.createElement('div');
+                    element.className = 'rectangle'
+                    element.style.left = mouse.x + 'px';
+                    element.style.top = mouse.y + 'px';
+                    canvas.appendChild(element)
+                    canvas.style.cursor = "crosshair";
+                }
+            }
+        }
+
+        function init() {
+            initDraw(document.getElementById('canvas'));
+            window.scrollTo(0,0);
+            console.log(datas.length)
+        }
+    </script>
+</head>
+<body onload="init();">
+    <div id="canvas">
+        <img src="/view?file={{ file_path }}" alt="image_with_faces_tagged"/>
+    </div>
+</body>
+</html>
