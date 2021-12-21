@@ -21,7 +21,7 @@ class Workspace:
         volumes = set()
         volumes_dict = {}
         for image in external_db_records:
-            path = os.path.realpath(image["cropPath"])
+            path = os.path.realpath(image["path"])
             parts = path.split(os.path.sep)
             if parts[1] == "Volumes":
                 volume = ("/%s/%s" % (parts[1], parts[2]))
@@ -32,7 +32,36 @@ class Workspace:
             overall_result = overall_result & ex
         return overall_result, volumes_dict
 
-    def fromRepositoryToWorkspace(self, external_db_records):
+    def fromImageRepositoryToWorkspace(self, external_db_records):
+        self.isCopyingImagesToWorkspace = True
+        rtn = []
+        folder = self.workspace_conf["images"]
+        for image in external_db_records:
+            src_file = image["path"]
+            filename = os.path.basename(src_file)
+            self.logger.info("src: %s" % src_file)
+            _, extension = os.path.splitext(filename)
+            new_filename = ("%s%s" % (image["id"], extension))
+            dest_file = os.path.join(folder, new_filename)
+            self.logger.info("des: %s" % dest_file)
+            shutil.copy(src_file, dest_file)
+            rec = {
+                "faceId": image["id"],
+                "imageId": image["id"],
+                "sourcePath": src_file,
+                "fileExt": extension,
+                "peopleId": "Unknown",
+                "peopleIdAssign": "Unknown",
+                "imageYear": image["photoTakenYear"],
+                "sample": False,
+                "scanned": False,
+                "scanWrong": False
+            }
+            rtn.append(rec)
+        self.isCopyingImagesToWorkspace = False
+        return rtn
+
+    def fromImageFaceRepositoryToWorkspace(self, external_db_records):
         self.isCopyingImagesToWorkspace = True
         rtn = []
         folder = self.workspace_conf["images"]

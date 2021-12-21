@@ -36,6 +36,28 @@ class ImageDatabase:
             self.logger.info(value["name"])
         await conn.close()
 
+    async def unrecognizedImages(self, amount):
+        conn = await asyncpg.connect(user=self.username,
+                                     password=self.password,
+                                     database=self.database,
+                                     host=self.host)
+        values = await conn.fetch(
+            """
+SELECT "id","path","photoTakenYear","photoTakenMonth","photoTakenDay" from "Image" where "id" in 
+(select t."id" from
+(select "id","path","photoTakenYear","photoTakenMonth","photoTakenDay"
+from "Image"
+where "hiddenByContainer" = 'f' and "hiddenByRepository" = 'f'
+order by "photoTakenYear" DESC, "photoTakenMonth" DESC, "photoTakenDay" DESC
+OFFSET 0 LIMIT %s
+) t)
+order by "photoTakenYear","photoTakenMonth","photoTakenDay"
+            """ % amount
+        )
+        self.logger.info("got %i unrecognized Image db records" % len(values))
+        await conn.close()
+        return values
+
     async def unrecognizedFaces(self, amount):
         conn = await asyncpg.connect(user=self.username,
                                      password=self.password,
