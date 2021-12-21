@@ -5,7 +5,8 @@ import logging
 from datetime import datetime
 from application import FaceClub, to_json
 import flask
-from flask import Flask, render_template
+import os
+from flask import Flask, render_template, request, send_from_directory
 
 app = Flask(__name__)
 
@@ -133,12 +134,21 @@ def copy_images_to_workspace():
 def list_images_in_workspace():
     records = faceClub.faceDatabase.get_faces(limit=faceClub.config.internal_database_display_amount)
     for record in records:
+        record["taggedFilePath"] = {
+            'text': record["taggedFilePath"],
+            'actions': [
+                {
+                    'func': 'view',
+                    'id': record["taggedFilePath"]
+                }
+            ]
+        }
         record["sample"] = {
             'text': record["sample"],
             'actions': [
                 {
                     'func': 'toggle_sample',
-                    'id': record["faceId"]
+                    'id': record["imageId"]
                 }
             ]
         }
@@ -147,7 +157,7 @@ def list_images_in_workspace():
             'actions': [
                 {
                     'func': 'toggle_scan_result',
-                    'id': record["faceId"]
+                    'id': record["imageId"]
                 }
             ]
         }
@@ -224,15 +234,15 @@ def list_model_backups():
     return to_json(records)
 
 
-@app.route("/face/toggle/sample/<faceId>")
-def toggle_face_sample(faceId):
-    faceClub.faceDatabase.toggle_sample(faceId)
+@app.route("/face/toggle/sample/<imageId>")
+def toggle_face_sample(imageId):
+    faceClub.faceDatabase.toggle_sample(imageId)
     return list_images_in_workspace()
 
 
-@app.route("/face/toggle/scan/result/<faceId>")
-def toggle_face_scan_result(faceId):
-    faceClub.faceDatabase.toggle_scan_result(faceId)
+@app.route("/face/toggle/scan/result/<imageId>")
+def toggle_face_scan_result(imageId):
+    faceClub.faceDatabase.toggle_scan_result(imageId)
     return list_images_in_workspace()
 
 
@@ -263,6 +273,15 @@ def start_recognition():
         return to_json({
             'recognition_progress': 'not_ready_for_start_recognition'
         })
+
+
+@app.route("/view")
+def download_file():
+    file_path = request.args.get('file')
+    filename = os.path.basename(file_path)
+    folder_path = os.path.dirname(file_path)
+    return send_from_directory(folder_path, filename, as_attachment=False)
+
 
 
 # Press the green button in the gutter to run the script.

@@ -31,9 +31,9 @@
     	value='List Model' />
     <input type='button' onclick='fetchQueryResult("list_model_backups")'
     	value='List Model Backups' />
-    <input type='button' onclick='streamQueryResult("start_training", ["training_progress", "peopleId", "state", "file"])'
+    <input type='button' onclick='streamQueryResult("start_training", ["training_progress", "peopleId", "state", "file"], "training_progress")'
     	value='Start Training' />
-    <input type='button' onclick='streamQueryResult("start_recognition", ["recognition_progress", "peopleId", "state", "face_file", "source_file", "file_size_kb", "time_cost_sec", "pic_size", "pic_channels"])'
+    <input type='button' onclick='streamQueryResult("start_recognition", ["recognition_progress", "peopleId", "state", "face_file", "source_file", "file_size_kb", "time_cost_sec", "pic_size"], "recognition_progress")'
     	value='Start Recognition' />
 
     <p id='msg'></p>

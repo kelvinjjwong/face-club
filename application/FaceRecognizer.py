@@ -7,6 +7,7 @@ import os
 import numpy
 from PIL import Image, ImageFont, ImageDraw
 import logging
+
 from application import to_json
 
 
@@ -59,7 +60,7 @@ class FaceRecognizer:
                 "state": "PROCESSING",
                 "message": "PROCESSING SAMPLE",
                 "peopleId": name,
-                "training_progress": "{}/{}".format(i+1, len(imagePaths)),
+                "training_progress": "{}/{}".format(i + 1, len(imagePaths)),
                 "file": imagePath
             })
 
@@ -87,7 +88,7 @@ class FaceRecognizer:
                 "state": "PROCESSED",
                 "message": "PROCESSED SAMPLE",
                 "peopleId": name,
-                "training_progress": "{}/{}".format(i+1, len(imagePaths)),
+                "training_progress": "{}/{}".format(i + 1, len(imagePaths)),
                 "file": imagePath
             })
         # dump the facial encodings + names to disk
@@ -107,13 +108,39 @@ class FaceRecognizer:
         })
         pass
 
-    def recognize_image(self, model, image, output_path=None, detection_method="cnn"):
+    def get_model_data(self, model):
         # load the known faces and embeddings
         self.logger.info("Loading encoded pickle ...")
-        data = pickle.loads(open(model, "rb").read())
+        return pickle.loads(open(model, "rb").read())
 
+    def generate_image_file_path(self, file_path, suffix):
+        filename = os.path.basename(file_path)
+        folder = os.path.dirname(file_path)
+        prefix, extension = os.path.splitext(filename)
+        out_filename = "%s_%s%s" % (prefix, suffix, extension)
+        out_file_path = os.path.join(folder, out_filename)
+        return out_file_path, out_filename, extension
+
+    def resize_image(self, file_path, width: int):
+        size = width, width
+        out_file_path, out_filename, extension = self.generate_image_file_path(file_path, width)
+        if not os.path.exists(out_file_path):
+            try:
+                im = Image.open(file_path)
+                im.thumbnail(size, Image.ANTIALIAS)
+                im.save(out_file_path, "JPEG")
+                self.logger.info("created thumbnail for %s" % file_path)
+                return out_file_path
+            except IOError:
+                self.logger.error("cannot create thumbnail for %s" % file_path)
+                return file_path
+        else:
+            return out_file_path
+
+    def recognize_image(self, model_data, image_file, output=False, detection_method="cnn"):
         # load the input image and convert it from BGR to RGB
-        image = cv2.imread(image)
+        resized_image_file = self.resize_image(image_file, 1280)
+        image = cv2.imread(resized_image_file)
         width, height, channels = image.shape
         rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
@@ -132,7 +159,7 @@ class FaceRecognizer:
         for encoding in encodings:
             # attempt to match each face in the input image to our known
             # encodings
-            matches = face_recognition.compare_faces(data["encodings"],
+            matches = face_recognition.compare_faces(model_data["encodings"],
                                                      encoding, tolerance=0.5)
             name = "Unknown"
 
@@ -147,7 +174,7 @@ class FaceRecognizer:
                 # loop over the matched indexes and maintain a count for
                 # each recognized face face
                 for i in matchedIdxs:
-                    name = data["names"][i]
+                    name = model_data["names"][i]
                     counts[name] = counts.get(name, 0) + 1
 
                 # determine the recognized face with the largest number of
@@ -158,10 +185,12 @@ class FaceRecognizer:
             # update the list of names
             names.append(name)
 
-        self.logger.info("Recognition result: %s" % names)
+        self.logger.info("Recognition result: %s - %s" % (image_file, names))
 
+        out_file_path = ""
         # save image
-        if output_path is not None:
+        if output is True and len(names) > 0:
+            out_file_path, out_filename, extension = self.generate_image_file_path(image_file, "faces")
             font_size = 14
             font = ImageFont.truetype('/System/Library/Fonts/PingFang.ttc', font_size)
             font_color = (255, 255, 255)
@@ -215,7 +244,7 @@ class FaceRecognizer:
                 # Draw the name
                 # cv2.putText(image, name , (label_text_x, label_text_y), font, 0.5, label_text_color, 1)
                 # font.draw_text(image, (3, 3), '你好', 24, label_text_color)
-                #self.logger.info("RECOGNITION RESULT: {} {} {} {} {}".format(left, top, right, bottom, name))
+                # self.logger.info("RECOGNITION RESULT: {} {} {} {} {}".format(left, top, right, bottom, name))
 
             img_PIL = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
             draw = ImageDraw.Draw(img_PIL)
@@ -237,8 +266,7 @@ class FaceRecognizer:
                 draw.text((label_text_x, label_text_y), display_name, font=font, fill=font_color)
 
             image = cv2.cvtColor(numpy.asarray(img_PIL), cv2.COLOR_RGB2BGR)
-            cv2.imwrite(output_path, image)
-            self.logger.info("Saved image to {}".format(output_path))
+            cv2.imwrite(out_file_path, image)
+            self.logger.info("Saved tagged image to {}".format(out_file_path))
 
-        self.logger.info("{} [INFO] DONE.".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
-        return names, width, height, channels
+        return names, width, height, out_file_path

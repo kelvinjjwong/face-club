@@ -1,4 +1,4 @@
-let streamQueryResult = (action, columns, id) => {
+let streamQueryResult = (action, columns, progress_column, id) => {
     createChunkedTable(columns);
     const xmlHttp = new XMLHttpRequest();
     var last_response_index = 0;
@@ -13,7 +13,7 @@ let streamQueryResult = (action, columns, id) => {
             for (let i=0;i<just_received_lines.length;i++) {
                 let line = just_received_lines[i];
                 console.log(line);
-                addRowToChunkedTable(columns, line);
+                addRowToChunkedTable(columns, line, progress_column);
             }
         }
     };
@@ -143,7 +143,7 @@ let createChunkedTable = (columns) => {
     divShowData.appendChild(table);
 }
 
-let addRowToChunkedTable = (columns, message) => {
+let addRowToChunkedTable = (columns, message, progress_column) => {
     let table = document.getElementById("chunkedTable");
     let tr = table.insertRow(-1);
 
@@ -153,6 +153,9 @@ let addRowToChunkedTable = (columns, message) => {
             let column = columns[j];
             let tabCell = tr.insertCell(-1);
             tabCell.innerText = json[column];
+            if (column === progress_column) {
+                document.getElementById("msg").innerText = "Executing " + json[column] + " ..."
+            }
         }
     }else{
         for (let j = 0; j < columns.length; j++) {
@@ -217,9 +220,16 @@ let tableFromJson = (arrayData) => {
                     if (actions !== undefined && actions !== null && Array.isArray(actions)){
                         for (let k = 0; k < actions.length; k++){
                             let action = actions[k];
-                            let button="<input type='button' onclick='"
-                                + action["func"] +"(\""+ action["id"] +"\")' value='"+ action["func"] +"' />&nbsp;"
-                            tabCell.innerHTML += button;
+                            if (action["func"] === "view") {
+                                if (action["id"] !== "") {
+                                    let link="<a href='/view?file=" + action["id"] +"' target='_blank'>view</a>&nbsp;"
+                                    tabCell.innerHTML += link;
+                                }
+                            }else{
+                                let button="<input type='button' onclick='"
+                                    + action["func"] +"(\""+ action["id"] +"\")' value='"+ action["func"] +"' />&nbsp;"
+                                tabCell.innerHTML += button;
+                            }
                         }
                     }
                 }else{

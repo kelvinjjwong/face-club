@@ -46,11 +46,13 @@ class Workspace:
             self.logger.info("des: %s" % dest_file)
             shutil.copy(src_file, dest_file)
             rec = {
-                "faceId": image["id"],
                 "imageId": image["id"],
                 "sourcePath": src_file,
+                "localFilePath": '',
+                "taggedFilePath": '',
                 "fileExt": extension,
                 "peopleId": "Unknown",
+                "peopleIdRecognized": "Unknown",
                 "peopleIdAssign": "Unknown",
                 "imageYear": image["photoTakenYear"],
                 "sample": False,
@@ -74,11 +76,13 @@ class Workspace:
             self.logger.info("des: %s" % dest_file)
             shutil.copy(src_file, dest_file)
             rec = {
-                "faceId": image["id"],
                 "imageId": image["imageId"],
                 "sourcePath": src_file,
+                "localFilePath": '',
+                "taggedFilePath": '',
                 "fileExt": extension,
                 "peopleId": "Unknown",
+                "peopleIdRecognized": "Unknown",
                 "peopleIdAssign": "Unknown",
                 "imageYear": image["imageYear"],
                 "sample": False,
@@ -128,7 +132,7 @@ class Workspace:
             if peopleId == "Unknown":
                 continue
                 # pass
-            filename = ("%s%s" % (face["faceId"], face["fileExt"]))
+            filename = ("%s%s" % (face["imageId"], face["fileExt"]))
             source_filename = os.path.join(source_folder, filename)
             target_folder = os.path.join(dataset, peopleId, filename)
             self.logger.info("pretrain src: %s" % source_filename)
@@ -286,9 +290,9 @@ class Workspace:
         folder = os.path.realpath(self.workspace_conf["model"])
         return os.path.join(folder, "model.pickle")
 
-    def get_image_file_path(self, faceId, fileExt):
+    def get_image_file_path(self, imageId, fileExt):
         folder = os.path.realpath(self.workspace_conf["images"])
-        filename = ("%s%s" % (faceId, fileExt))
+        filename = ("%s%s" % (imageId, fileExt))
         return os.path.join(folder, filename)
 
 
