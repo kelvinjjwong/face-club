@@ -112,18 +112,46 @@ class FaceDatabase:
         """ % (limit, offset))
         for imageId, sourcePath, localFilePath, taggedFilePath, fileExt, peopleId, peopleIdRecognized, peopleIdAssign, imageYear, sample, scanned, scanWrong in result:
             face = {
-                'imageId': imageId,
-                'sourcePath': sourcePath,
                 'localFilePath': localFilePath,
                 'taggedFilePath': taggedFilePath,
                 'fileExt': fileExt,
                 'peopleId': peopleId,
                 'peopleIdRecognized': peopleIdRecognized,
                 'peopleIdAssign': peopleIdAssign,
-                'imageYear': imageYear,
-                'sample': False if sample == 0 else True,
                 'scanned': False if scanned == 0 else True,
-                'scanWrong': False if scanWrong == 0 else True
+                'scanWrong': False if scanWrong == 0 else True,
+                'sample': False if sample == 0 else True,
+                'sourcePath': sourcePath,
+                'imageId': imageId,
+                'imageYear': imageYear
+            }
+            faces.append(face)
+        self.logger.info("got %s face records" % len(faces))
+        return faces
+
+    def get_scanned_faces(self, limit=100, offset=0):
+        self.logger.info("getting image records with limit=%s offset=%s" % (limit, offset))
+        faces = []
+        conn = self.engine.connect()
+        result = conn.execute("""
+        SELECT * FROM faces WHERE scanned=1 AND taggedFilePath <> ''
+        ORDER BY imageYear ASC, sourcePath ASC 
+        LIMIT %s OFFSET %s
+        """ % (limit, offset))
+        for imageId, sourcePath, localFilePath, taggedFilePath, fileExt, peopleId, peopleIdRecognized, peopleIdAssign, imageYear, sample, scanned, scanWrong in result:
+            face = {
+                'localFilePath': localFilePath,
+                'taggedFilePath': taggedFilePath,
+                'fileExt': fileExt,
+                'peopleId': peopleId,
+                'peopleIdRecognized': peopleIdRecognized,
+                'peopleIdAssign': peopleIdAssign,
+                'scanned': False if scanned == 0 else True,
+                'scanWrong': False if scanWrong == 0 else True,
+                'sample': False if sample == 0 else True,
+                'sourcePath': sourcePath,
+                'imageId': imageId,
+                'imageYear': imageYear
             }
             faces.append(face)
         self.logger.info("got %s face records" % len(faces))

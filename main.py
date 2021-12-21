@@ -134,6 +134,15 @@ def copy_images_to_workspace():
 def list_images_in_workspace():
     records = faceClub.faceDatabase.get_faces(limit=faceClub.config.internal_database_display_amount)
     for record in records:
+        record["localFilePath"] = {
+            'text': record["localFilePath"],
+            'actions': [
+                {
+                    'func': 'view',
+                    'id': record["localFilePath"]
+                }
+            ]
+        }
         record["taggedFilePath"] = {
             'text': record["taggedFilePath"],
             'actions': [
@@ -164,6 +173,49 @@ def list_images_in_workspace():
     return to_json(records)
 
 
+@app.route("/images/scanned/faces")
+def list_scanned_faces_in_workspace():
+    records = faceClub.faceDatabase.get_scanned_faces(limit=faceClub.config.internal_database_display_amount)
+    for record in records:
+        record["localFilePath"] = {
+            'text': record["localFilePath"],
+            'actions': [
+                {
+                    'func': 'view',
+                    'id': record["localFilePath"]
+                }
+            ]
+        }
+        record["taggedFilePath"] = {
+            'text': record["taggedFilePath"],
+            'actions': [
+                {
+                    'func': 'view',
+                    'id': record["taggedFilePath"]
+                }
+            ]
+        }
+        record["sample"] = {
+            'text': record["sample"],
+            'actions': [
+                {
+                    'func': 'scanned_toggle_sample',
+                    'id': record["imageId"]
+                }
+            ]
+        }
+        record["scanWrong"] = {
+            'text': record["scanWrong"],
+            'actions': [
+                {
+                    'func': 'scanned_toggle_scan_result',
+                    'id': record["imageId"]
+                }
+            ]
+        }
+    return to_json(records)
+
+
 @app.route("/dataset/backups")
 def list_dataset_backups():
     records = faceClub.workspace.get_dataset_backups()
@@ -186,6 +238,16 @@ def use_dataset(folder):
 @app.route("/dataset/list")
 def list_dataset_files():
     records = faceClub.workspace.list_dataset()
+    for record in records:
+        record["file"] = {
+            'text': record["file"],
+            'actions': [
+                {
+                    'func': 'view',
+                    'id': record["file"]
+                }
+            ]
+        }
     return to_json(records)
 
 
@@ -244,6 +306,18 @@ def toggle_face_sample(imageId):
 def toggle_face_scan_result(imageId):
     faceClub.faceDatabase.toggle_scan_result(imageId)
     return list_images_in_workspace()
+
+
+@app.route("/face/scanned/toggle/sample/<imageId>")
+def toggle_scanned_face_sample(imageId):
+    faceClub.faceDatabase.toggle_sample(imageId)
+    return list_scanned_faces_in_workspace()
+
+
+@app.route("/face/scanned/toggle/scan/result/<imageId>")
+def toggle_scanned_face_scan_result(imageId):
+    faceClub.faceDatabase.toggle_scan_result(imageId)
+    return list_scanned_faces_in_workspace()
 
 
 @app.route("/training/start")

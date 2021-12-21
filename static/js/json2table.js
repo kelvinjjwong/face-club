@@ -77,6 +77,10 @@ let fetchQueryResult = (action, id) => {
         xmlHttp.open("GET", "/images/list", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
+    }else if(action === "list_scanned_faces"){
+        xmlHttp.open("GET", "/images/scanned/faces", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
     }else if(action === "use_dataset"){
         xmlHttp.open("GET", "/dataset/use/"+ id, true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
@@ -119,6 +123,14 @@ let fetchQueryResult = (action, id) => {
         xmlHttp.send();
     }else if(action === "toggle_face_scan_result"){
         xmlHttp.open("GET", "/face/toggle/scan/result/" + id, true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
+    }else if(action === "toggle_scanned_face_sample"){
+        xmlHttp.open("GET", "/face/scanned/toggle/sample/" + id, true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
+    }else if(action === "toggle_scanned_face_scan_result"){
+        xmlHttp.open("GET", "/face/scanned/toggle/scan/result/" + id, true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
     }
