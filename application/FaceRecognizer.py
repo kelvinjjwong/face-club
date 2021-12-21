@@ -139,6 +139,7 @@ class FaceRecognizer:
 
     def recognize_image(self, model_data, image_file, output=False, detection_method="cnn"):
         # load the input image and convert it from BGR to RGB
+        thumbnail_image_file = self.resize_image(image_file, 200)
         resized_image_file = self.resize_image(image_file, 1280)
         image = cv2.imread(resized_image_file)
         width, height, channels = image.shape

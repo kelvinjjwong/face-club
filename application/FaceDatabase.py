@@ -114,7 +114,6 @@ class FaceDatabase:
             face = {
                 'localFilePath': localFilePath,
                 'taggedFilePath': taggedFilePath,
-                'fileExt': fileExt,
                 'peopleId': peopleId,
                 'peopleIdRecognized': peopleIdRecognized,
                 'peopleIdAssign': peopleIdAssign,
@@ -123,6 +122,7 @@ class FaceDatabase:
                 'sample': False if sample == 0 else True,
                 'sourcePath': sourcePath,
                 'imageId': imageId,
+                'fileExt': fileExt,
                 'imageYear': imageYear
             }
             faces.append(face)
@@ -142,7 +142,6 @@ class FaceDatabase:
             face = {
                 'localFilePath': localFilePath,
                 'taggedFilePath': taggedFilePath,
-                'fileExt': fileExt,
                 'peopleId': peopleId,
                 'peopleIdRecognized': peopleIdRecognized,
                 'peopleIdAssign': peopleIdAssign,
@@ -151,6 +150,7 @@ class FaceDatabase:
                 'sample': False if sample == 0 else True,
                 'sourcePath': sourcePath,
                 'imageId': imageId,
+                'fileExt': fileExt,
                 'imageYear': imageYear
             }
             faces.append(face)

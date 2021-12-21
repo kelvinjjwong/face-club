@@ -221,7 +221,8 @@ class Workspace:
             if os.path.isdir(sub_folder_path):
                 for filename in os.listdir(sub_folder_path):
                     file_path = os.path.join(sub_folder_path, filename)
-                    if os.path.isfile(file_path):
+                    _, extension = os.path.splitext(filename)
+                    if os.path.isfile(file_path) and extension.lower() in ('.jpg', '.png', '.jpeg'):
                         files.append({
                             'peopleId': sub_folder,
                             'file': file_path,

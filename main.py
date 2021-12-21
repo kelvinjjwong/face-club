@@ -140,6 +140,10 @@ def list_images_in_workspace():
                 {
                     'func': 'view',
                     'id': record["localFilePath"]
+                },
+                {
+                    'func': 'thumbnail',
+                    'id': str(record["localFilePath"]).replace(record["fileExt"], ("_%s%s" % (200, record["fileExt"])))
                 }
             ]
         }
@@ -183,6 +187,10 @@ def list_scanned_faces_in_workspace():
                 {
                     'func': 'view',
                     'id': record["localFilePath"]
+                },
+                {
+                    'func': 'thumbnail',
+                    'id': str(record["localFilePath"]).replace(record["fileExt"], ("_%s%s" % (200, record["fileExt"])))
                 }
             ]
         }
@@ -267,6 +275,16 @@ def list_dataset_people():
 @app.route("/dataset/list/people/<peopleId>")
 def list_dataset_of_people(peopleId):
     records = faceClub.workspace.list_dataset_of_people(peopleId)
+    for record in records:
+        record["file"] = {
+            'text': record["file"],
+            'actions': [
+                {
+                    'func': 'view',
+                    'id': record["file"]
+                }
+            ]
+        }
     return to_json(records)
 
 

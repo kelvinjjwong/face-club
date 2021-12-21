@@ -234,7 +234,12 @@ let tableFromJson = (arrayData) => {
                             let action = actions[k];
                             if (action["func"] === "view") {
                                 if (action["id"] !== "") {
-                                    let link="<a href='/view?file=" + action["id"] +"' target='_blank'>view</a>&nbsp;"
+                                    let link = "<a href='/view?file=" + action["id"] + "' target='_blank'>view</a>&nbsp;"
+                                    tabCell.innerHTML += link;
+                                }
+                            }else if (action["func"] === "thumbnail") {
+                                if (action["id"] !== "") {
+                                    let link="<img src='/view?file=" + action["id"] +"'  alt='thumbnail'/>&nbsp;"
                                     tabCell.innerHTML += link;
                                 }
                             }else{
