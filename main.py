@@ -31,6 +31,7 @@ def face_job():
 faceClub.schedule.add('face_job', 5, face_job)
 faceClub.schedule.stop('face_job')
 
+
 @app.before_request
 def start_timing():
     """ begins timing of single request """
@@ -394,6 +395,20 @@ def canvas():
         return render_template("canvas.html", file_path=file_path, positions=positions)
     else:
         return render_template("404.html")
+
+
+@app.route("/people")
+def get_people():
+    records = []
+    people = asyncio.run(faceClub.imageDatabase.get_people())
+    for p in people:
+        records.append({
+            'peopleId': p['id'],
+            'name': p['name'],
+            'shortName': p['shortName'],
+            'icon_file_path': ("%s%s/%s" % (p['iconCropPath'], p['iconSubPath'], p['iconFilename']))
+        })
+    return to_json(records)
 
 
 # Press the green button in the gutter to run the script.

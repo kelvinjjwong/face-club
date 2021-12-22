@@ -95,3 +95,17 @@ order by "imageYear" asc, "imageMonth" asc, "imageDay" asc, "imageId" asc, filen
             """, peopleId, id
         )
         await conn.close()
+
+    async def get_people(self):
+        conn = await asyncpg.connect(user=self.username,
+                                     password=self.password,
+                                     database=self.database,
+                                     host=self.host)
+        values = await conn.fetch(
+            """
+SELECT * from "People"
+            """
+        )
+        self.logger.info("got %i people db records" % len(values))
+        await conn.close()
+        return values

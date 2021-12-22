@@ -3,113 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Canvas</title>
-    <style>
-        body {
-            margin: 0px;
-        }
-        #canvas {
-            width:2000px;
-            height:2000px;
-            border: 0px solid transparent;
-        }
-        .rectangle {
-            border: 1px solid #FF0000;
-            position: absolute;
-        }
-
-        /* The Modal (background) */
-        .modal {
-          display: none; /* Hidden by default */
-          position: fixed; /* Stay in place */
-          z-index: 1; /* Sit on top */
-          padding-top: 20px; /* Location of the box */
-          left: 0;
-          top: 0;
-          width: 100%; /* Full width */
-          height: 100%; /* Full height */
-          overflow: auto; /* Enable scroll if needed */
-          background-color: rgb(0,0,0); /* Fallback color */
-          background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-        }
-
-        /* Modal Content */
-        .modal-content {
-          position: relative;
-          background-color: #fefefe;
-          margin: auto;
-          padding: 0;
-          border: 1px solid #888;
-          width: 400px;
-          box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
-          -webkit-animation-name: animatetop;
-          -webkit-animation-duration: 0.4s;
-          animation-name: animatetop;
-          animation-duration: 0.4s
-        }
-
-        /* Add Animation */
-        @-webkit-keyframes animatetop {
-          from {top:-300px; opacity:0}
-          to {top:0; opacity:1}
-        }
-
-        @keyframes animatetop {
-          from {top:-300px; opacity:0}
-          to {top:0; opacity:1}
-        }
-
-        /* The Close Button */
-        .close {
-          color: white;
-          float: right;
-          font-size: 18px;
-          font-weight: bold;
-        }
-
-        .close:hover,
-        .close:focus {
-          color: #000;
-          text-decoration: none;
-          cursor: pointer;
-        }
-
-        .modal-header {
-          padding: 2px 10px;
-          background-color: #5cb85c;
-          color: white;
-        }
-
-        .modal-header h2 {margin: 3px;}
-
-        .modal-body {
-            padding: 2px 2px;
-            height: 90px;
-        }
-
-        .modal-body p {margin: 4px;}
-
-        .modal-footer {
-          padding: 2px 10px;
-          background-color: #5cb85c;
-          color: white;
-        }
-
-        #preview {
-            float: left;
-            width: 80px;
-            height: 80px;
-            padding: 5px;
-        }
-
-        #controls {
-            display: inline-block;
-            padding: 2px;
-            clear: both;
-        }
-    </style>
+    <link rel="icon" href="{{ url_for('static', filename='images/face.png') }}" type="image/x-icon" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/canvas.css') }}" />
+    <script src="{{ url_for('static', filename='js/canvas.js') }}"></script>
     <script>
-        let curr_pos = {};
-
+        let unknown_person_icon = "{{ url_for('static', filename='images/unknown.png') }}";
         let datas = [];
     {% for position in positions %}
         {
@@ -127,122 +25,11 @@
         }
     {% endfor %}
 
-        function inBox(x, y) {
-            for(var i=0;i<datas.length;i++){
-                let position = datas[i];
-                if(x >= position.pos_left && x <= position.pos_right && y >= position.pos_top && y <= position.pos_bottom) {
-                    position.idx = i;
-                    return position;
-                }
-            }
-            return null;
-        }
-
-        function initDraw(canvas) {
-            function setMousePosition(e) {
-                var ev = e || window.event; //Moz || IE
-                if (ev.pageX) { //Moz
-                    mouse.x = ev.pageX + window.pageXOffset;
-                    mouse.y = ev.pageY + window.pageYOffset;
-                } else if (ev.clientX) { //IE
-                    mouse.x = ev.clientX + document.body.scrollLeft;
-                    mouse.y = ev.clientY + document.body.scrollTop;
-                }
-                let obj = inBox(mouse.x, mouse.y);
-                if(obj != null){
-                    console.log("it's "+ obj.idx + " - " + obj.peopleIdRecognized + " - " + obj.peopleId + " - " + obj.peopleName);
-                }
-            };
-
-            var mouse = {
-                x: 0,
-                y: 0,
-                startX: 0,
-                startY: 0
-            };
-            var element = null;
-
-            canvas.addEventListener('mousemove', function (e) {
-                setMousePosition(e);
-                if (element !== null) {
-                    element.style.width = Math.abs(mouse.x - mouse.startX) + 'px';
-                    element.style.height = Math.abs(mouse.y - mouse.startY) + 'px';
-                    element.style.left = (mouse.x - mouse.startX < 0) ? mouse.x + 'px' : mouse.startX + 'px';
-                    element.style.top = (mouse.y - mouse.startY < 0) ? mouse.y + 'px' : mouse.startY + 'px';
-                }
-            });
-
-            canvas.onclick = function (e) {
-                if (element !== null) {
-                    element = null;
-                    canvas.style.cursor = "default";
-                    console.log("finsihed.");
-
-                    curr_pos.pos_right = mouse.x;
-                    curr_pos.pos_bottom = mouse.y;
-                    curr_pos.peopleIdRecognized = '';
-                    curr_pos.peopleIdAssign = 'Unknown';
-                    curr_pos.peopleId = 'Unknown';
-                    curr_pos.peopleName = '';
-                    curr_pos.source = 'draw';
-
-                    console.log(curr_pos);
-                    datas.push(curr_pos);
-                    openDialog(curr_pos);
-                } else {
-                    console.log("begun.");
-                    let x = mouse.x;
-                    let y = mouse.y;
-                    mouse.startX = x;
-                    mouse.startY = y;
-                    element = document.createElement('div');
-                    element.id = 'face_' + x + "_" + y;
-                    element.className = 'rectangle';
-                    element.style.left = x + 'px';
-                    element.style.top = y + 'px';
-                    canvas.appendChild(element);
-                    canvas.style.cursor = "crosshair";
-
-                    curr_pos = {};
-                    curr_pos.div = element.id;
-                    curr_pos.pos_left = x;
-                    curr_pos.pos_top = y;
-                }
-            }
-        }
-
         function init() {
             initDraw(document.getElementById('canvas'));
             window.scrollTo(0,0);
             console.log(datas.length)
-        }
-    </script>
-    <script>
-        function openDialog(item) {
-            // Get the modal
-            var modal = document.getElementById("myModal");
-            // Get the <span> element that closes the modal
-            var span = document.getElementsByClassName("close")[0];
-            // When the user clicks on <span> (x), close the modal
-            span.onclick = function () {
-                modal.style.display = "none";
-            }
-            modal.style.display = "block";
-
-            let canvas = document.getElementById('preview_canvas');
-            let ctx = canvas.getContext('2d');
-            let image = document.getElementById("img");
-            let item_width = item.pos_right - item.pos_left;
-            let item_height = item.pos_bottom - item.pos_top;
-            let scale = 100;
-            if (Math.max(item_width, item_height) > 80) {
-                scale = 80 / Math.max(item_width, item_height) * 100;
-            }
-            ctx.drawImage(image,
-                item.pos_left, item.pos_top,   // Start at 70/20 pixels from the left and the top of the image (crop),
-                item_width, item_height,   // "Get" a `50 * 50` (w * h) area from the source image (crop),
-                0, 0,     // Place the result at 0, 0 in the canvas,
-                scale, scale); // With as width / height: 100 * 100 (scale)
+            fetchQueryResult("people");
         }
     </script>
 </head>
@@ -262,9 +49,30 @@
             <div id="preview">
                 <canvas id="preview_canvas" width="80px" height="80px"></canvas>
             </div>
+            <div id="personIcon">
+                <img id="personIconImg" src="{{ url_for('static', filename='images/unknown.png') }}" width="80" height="80" alt="face">
+            </div>
             <div id="controls">
-              <p>Some text in the Modal Body</p>
-              <p>Some other text...</p>
+                <p>
+                    <div class="autocomplete" style="width:220px;">
+                        <input id="person" type="text" name="person" placeholder="Key in the name">
+                    </div>
+                    <div id="divTag">
+                        <input type="button" onclick="tag_it()" value="Tag it" style="width: 60px;">
+                    </div>
+                </p>
+                <p>
+                    <div id="divPersonName">
+                        <input id="personName" type="text" name="personName" placeholder="Name">
+                    </div>
+                    <div id="divShortName">
+                        <input id="shortName" type="text" name="shortName" placeholder="Nick name">
+                    </div>
+                    <div id="divUntag">
+                        <input type="button" onclick="untag_it()" value="Untag" style="width: 60px;">
+                    </div>
+                </p>
+                <p id="message"></p>
             </div>
         </div>
       </div>
