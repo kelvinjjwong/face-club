@@ -281,4 +281,4 @@ class FaceRecognizer:
             cv2.imwrite(out_file_path, image)
             self.logger.info("Saved tagged image to {}".format(out_file_path))
 
-        return names, positions, width, height, out_file_path
+        return names, positions, width, height, resized_image_file, out_file_path

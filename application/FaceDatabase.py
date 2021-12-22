@@ -19,6 +19,7 @@ class FaceDatabase:
                            Column('imageId', String(50), primary_key=True),
                            Column("sourcePath", Text),
                            Column("localFilePath", Text),
+                           Column("resizedFilePath", Text),
                            Column("taggedFilePath", Text),
                            Column("fileExt", String(10)),
                            Column("peopleId", Text),
@@ -78,6 +79,7 @@ class FaceDatabase:
                 'imageId': row["imageId"],
                 'sourcePath': row["sourcePath"],
                 'localFilePath': row["localFilePath"],
+                'resizedFilePath': row["resizedFilePath"],
                 'taggedFilePath': row["taggedFilePath"],
                 'fileExt': row["fileExt"],
                 'peopleId': row["peopleId"],
@@ -109,9 +111,10 @@ class FaceDatabase:
         ORDER BY imageYear ASC, sourcePath ASC 
         LIMIT %s OFFSET %s
         """ % (limit, offset))
-        for imageId, sourcePath, localFilePath, taggedFilePath, fileExt, peopleId, peopleIdRecognized, peopleIdAssign, imageYear, sample, scanned, scanWrong in result:
+        for imageId, sourcePath, localFilePath, resizedFilePath, taggedFilePath, fileExt, peopleId, peopleIdRecognized, peopleIdAssign, imageYear, sample, scanned, scanWrong in result:
             face = {
                 'localFilePath': localFilePath,
+                'resizedFilePath': resizedFilePath,
                 'taggedFilePath': taggedFilePath,
                 'peopleId': peopleId,
                 'peopleIdRecognized': peopleIdRecognized,
@@ -137,9 +140,10 @@ class FaceDatabase:
         ORDER BY imageYear ASC, sourcePath ASC 
         LIMIT %s OFFSET %s
         """ % (limit, offset))
-        for imageId, sourcePath, localFilePath, taggedFilePath, fileExt, peopleId, peopleIdRecognized, peopleIdAssign, imageYear, sample, scanned, scanWrong in result:
+        for imageId, sourcePath, localFilePath, resizedFilePath, taggedFilePath, fileExt, peopleId, peopleIdRecognized, peopleIdAssign, imageYear, sample, scanned, scanWrong in result:
             face = {
                 'localFilePath': localFilePath,
+                'resizedFilePath': resizedFilePath,
                 'taggedFilePath': taggedFilePath,
                 'peopleId': peopleId,
                 'peopleIdRecognized': peopleIdRecognized,
@@ -178,7 +182,7 @@ class FaceDatabase:
         else:
             self.logger.error("image record not found: %s" % imageId)
 
-    def update_face(self, imageId, localFilePath, taggedFilePath, peopleIdRecognized):
+    def update_face(self, imageId, localFilePath, resizedFilePath, taggedFilePath, peopleIdRecognized):
         conn = self.engine.connect()
         face = self.get_face(imageId, conn=conn)
         if face is not None:
@@ -186,6 +190,7 @@ class FaceDatabase:
                 .where(self.faces.c.imageId == imageId) \
                 .values(
                 localFilePath=localFilePath,
+                resizedFilePath=resizedFilePath,
                 taggedFilePath=taggedFilePath,
                 peopleIdRecognized=peopleIdRecognized,
                 scanned=1

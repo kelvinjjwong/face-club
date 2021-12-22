@@ -8,8 +8,17 @@ body {
     border: 0px solid transparent;
 }
 .rectangle {
-    border: 1px solid #FF0000;
+    border: 1px solid #444444;
     position: absolute;
+}
+
+.faceName {
+    font-size: 12px;
+    border: 1px solid #444444;
+    color: #dddddd;
+    background-color: #444444;
+    position: absolute;
+    text-align: center;
 }
 
 /* The Modal (background) */

@@ -135,6 +135,8 @@ def copy_images_to_workspace():
 def list_images_in_workspace():
     records = faceClub.faceDatabase.get_faces(limit=faceClub.config.internal_database_display_amount)
     for record in records:
+        resizedFilePath = record["resizedFilePath"]
+        taggedFilePath = record["taggedFilePath"]
         record["localFilePath"] = {
             'text': record["localFilePath"],
             'actions': [
@@ -148,16 +150,29 @@ def list_images_in_workspace():
                 }
             ]
         }
-        record["taggedFilePath"] = {
-            'text': record["taggedFilePath"],
+        record["resizedFilePath"] = {
+            'text': resizedFilePath,
             'actions': [
                 {
                     'func': 'view',
-                    'id': record["taggedFilePath"]
+                    'id': resizedFilePath
                 },
                 {
                     'func': 'canvas',
-                    'id': record["taggedFilePath"]
+                    'id': resizedFilePath
+                }
+            ]
+        }
+        record["taggedFilePath"] = {
+            'text': taggedFilePath,
+            'actions': [
+                {
+                    'func': 'view',
+                    'id': taggedFilePath
+                },
+                {
+                    'func': 'canvas',
+                    'id': resizedFilePath
                 }
             ]
         }
@@ -186,6 +201,8 @@ def list_images_in_workspace():
 def list_scanned_faces_in_workspace():
     records = faceClub.faceDatabase.get_scanned_faces(limit=faceClub.config.internal_database_display_amount)
     for record in records:
+        resizedFilePath = record["resizedFilePath"]
+        taggedFilePath = record["taggedFilePath"]
         record["localFilePath"] = {
             'text': record["localFilePath"],
             'actions': [
@@ -199,16 +216,29 @@ def list_scanned_faces_in_workspace():
                 }
             ]
         }
-        record["taggedFilePath"] = {
-            'text': record["taggedFilePath"],
+        record["resizedFilePath"] = {
+            'text': resizedFilePath,
             'actions': [
                 {
                     'func': 'view',
-                    'id': record["taggedFilePath"]
+                    'id': resizedFilePath
                 },
                 {
                     'func': 'canvas',
-                    'id': record["taggedFilePath"]
+                    'id': resizedFilePath
+                }
+            ]
+        }
+        record["taggedFilePath"] = {
+            'text': taggedFilePath,
+            'actions': [
+                {
+                    'func': 'view',
+                    'id': taggedFilePath
+                },
+                {
+                    'func': 'canvas',
+                    'id': resizedFilePath
                 }
             ]
         }
@@ -390,7 +420,7 @@ def canvas():
     if file_path != '':
         filename = os.path.basename(file_path)
         prefix, extension = os.path.splitext(filename)
-        imageId = prefix.replace("_faces", "")
+        imageId = prefix.replace("_1280", "")
         positions = faceClub.faceDatabase.get_positions(imageId)
         return render_template("canvas.html", file_path=file_path, positions=positions)
     else:

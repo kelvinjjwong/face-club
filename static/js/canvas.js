@@ -13,6 +13,40 @@ function inBox(x, y) {
     return null;
 }
 
+function drawNameBox(person, drawRectangle, drawName) {
+    if(drawRectangle === true){
+        let element = document.createElement('div');
+        element.id = 'face_' + person.pos_left + "_" + person.pos_top;
+        element.className = 'rectangle';
+        element.style.left = person.pos_left + 'px';
+        element.style.top = person.pos_top + 'px';
+        element.style.width = (person.pos_right - person.pos_left) + 'px';
+        element.style.height = (person.pos_bottom - person.pos_top) + 'px';
+        canvas.appendChild(element);
+        canvas.style.cursor = "crosshair";
+    }
+    if(drawName === true){
+        let min_width = 50;
+
+        let width = person.pos_right - person.pos_left;
+        let left = person.pos_left;
+        if (width < min_width) {
+            left = (left - (min_width - width) / 2);
+            width = min_width;
+        }
+
+        var label = document.createElement('div');
+        label.id = 'name_' + person.pos_left + "_" + person.pos_top;
+        label.className = 'faceName';
+        label.style.left = left + 'px';
+        label.style.top = (person.pos_bottom + 2) + 'px';
+        label.style.width = width + 'px';
+        label.style.height = '16px';
+        canvas.appendChild(label);
+        label.innerHTML = person.peopleName;
+    }
+}
+
 function initDraw(canvas) {
     function setMousePosition(e) {
         var ev = e || window.event; //Moz || IE
@@ -23,11 +57,7 @@ function initDraw(canvas) {
             mouse.x = ev.clientX + document.body.scrollLeft;
             mouse.y = ev.clientY + document.body.scrollTop;
         }
-        let obj = inBox(mouse.x, mouse.y);
-        if(obj != null){
-            console.log("it's "+ obj.idx + " - " + obj.peopleIdRecognized + " - " + obj.peopleId + " - " + obj.peopleName);
-        }
-    };
+    }
 
     var mouse = {
         x: 0,
@@ -48,42 +78,60 @@ function initDraw(canvas) {
     });
 
     canvas.onclick = function (e) {
-        if (element !== null) {
-            element = null;
-            canvas.style.cursor = "default";
-            console.log("draw rectangle finished.");
+        let exist_box = inBox(mouse.x, mouse.y);
+        if (exist_box !== null){
+            curr_pos = exist_box;
+            openDialog(exist_box);
+        }else {
 
-            curr_pos.pos_right = mouse.x;
-            curr_pos.pos_bottom = mouse.y;
-            curr_pos.peopleIdRecognized = '';
-            curr_pos.peopleIdAssign = 'Unknown';
-            curr_pos.peopleId = 'Unknown';
-            curr_pos.peopleName = '';
-            curr_pos.source = 'draw';
+            if (element !== null) {
+                element = null;
+                canvas.style.cursor = "default";
+                console.log("draw rectangle finished.");
 
-            console.log(curr_pos);
-            datas.push(curr_pos);
-            openDialog(curr_pos);
-        } else {
-            console.log("draw rectangle begun.");
-            let x = mouse.x;
-            let y = mouse.y;
-            mouse.startX = x;
-            mouse.startY = y;
-            element = document.createElement('div');
-            element.id = 'face_' + x + "_" + y;
-            element.className = 'rectangle';
-            element.style.left = x + 'px';
-            element.style.top = y + 'px';
-            canvas.appendChild(element);
-            canvas.style.cursor = "crosshair";
+                let x = mouse.x;
+                let y = mouse.y;
 
-            curr_pos = {};
-            curr_pos.div = element.id;
-            curr_pos.pos_left = x;
-            curr_pos.pos_top = y;
+                curr_pos.pos_right = x;
+                curr_pos.pos_bottom = y;
+                curr_pos.peopleIdRecognized = '';
+                curr_pos.peopleIdAssign = '';
+                curr_pos.peopleId = '';
+                curr_pos.peopleName = '';
+                curr_pos.source = 'draw';
+
+                console.log(curr_pos);
+                datas.push(curr_pos);
+                openDialog(curr_pos);
+
+                drawNameBox(curr_pos, false, true);
+
+            } else {
+                console.log("draw rectangle begun.");
+                let x = mouse.x;
+                let y = mouse.y;
+                mouse.startX = x;
+                mouse.startY = y;
+                element = document.createElement('div');
+                element.id = 'face_' + x + "_" + y;
+                element.className = 'rectangle';
+                element.style.left = x + 'px';
+                element.style.top = y + 'px';
+                canvas.appendChild(element);
+                canvas.style.cursor = "crosshair";
+
+                curr_pos = {};
+                curr_pos.div = element.id;
+                curr_pos.pos_left = x;
+                curr_pos.pos_top = y;
+            }
         }
     }
+}
+
+function closeDialog() {
+    var modal = document.getElementById("myModal");
+    modal.style.display = "none";
 }
 
 function openDialog(item) {
@@ -96,21 +144,41 @@ function openDialog(item) {
         modal.style.display = "none";
     }
     modal.style.display = "block";
+    document.getElementById("person").value = "";
+    document.getElementById("personName").value = "";
+    document.getElementById("shortName").value = "";
+    document.getElementById("personIconImg").src = unknown_person_icon;
 
     let canvas = document.getElementById('preview_canvas');
     let ctx = canvas.getContext('2d');
     let image = document.getElementById("img");
-    let item_width = item.pos_right - item.pos_left + 5;
-    let item_height = item.pos_bottom - item.pos_top + 5;
-    let scale = 100;
-    if (Math.max(item_width, item_height) > 75) {
-        scale = 75 / Math.max(item_width, item_height) * 100;
+    let item_width = item.pos_right - item.pos_left;
+    let item_height = item.pos_bottom - item.pos_top;
+    let origin_scale = 80;
+    let scale = origin_scale;
+    if (Math.max(item_width, item_height) > origin_scale) {
+        scale = origin_scale / Math.max(item_width, item_height) * origin_scale;
     }
     ctx.drawImage(image,
         item.pos_left, item.pos_top,   // Start at 70/20 pixels from the left and the top of the image (crop),
         item_width, item_height,   // "Get" a `50 * 50` (w * h) area from the source image (crop),
         0, 0,     // Place the result at 0, 0 in the canvas,
         scale, scale); // With as width / height: 100 * 100 (scale)
+
+    if(item.peopleId !== ""){
+        document.getElementById("person").value = item.peopleId;
+        let person = search_person_from_people(item.peopleId);
+        if(person !== null){
+            document.getElementById("personName").value = person.name;
+            document.getElementById("shortName").value = person.shortName;
+            if(person.icon_file_path !== ""){
+                document.getElementById("personIconImg").src = "/view?file=" + person.icon_file_path;
+            }else{
+                document.getElementById("personIconImg").src = unknown_person_icon;
+            }
+        }
+    }
+
 }
 
 let fetchQueryResult = (action, id) => {
@@ -125,7 +193,8 @@ let fetchQueryResult = (action, id) => {
                 }
                 if (action === "people"){
                     people = data;
-                    autocomplete(document.getElementById("person"), people);
+                    handle_loaded_people(people);
+
                 }else{
                     console.log(data);
                 }
@@ -288,12 +357,58 @@ function autocomplete(inp, arr) {
     });
 }
 
+function search_person_from_people(peopleId) {
+    var person = null;
+    for(var i=0;i<people.length;i++){
+        var p = people[i];
+        if (p.peopleId === peopleId){
+            person = p;
+            break;
+        }
+    }
+    return person;
+}
+
 function tag_it(){
     console.log("tag it")
+    let peopleId = document.getElementById("person").value.trim();
+    let peopleName = document.getElementById("personName").value.trim();
+    let shortName = document.getElementById("shortName").value.trim();
+    curr_pos.peopleIdAssign = peopleId
+    curr_pos.peopleId = curr_pos.peopleIdAssign;
+
+    for(var i=0;i<datas.length;i++){
+        let p = datas[i];
+        if(p.pos_left === curr_pos.pos_left && p.pos_right === curr_pos.pos_right && p.pos_top === curr_pos.pos_top && p.pos_bottom === curr_pos.pos_bottom) {
+            p.peopleIdAssign = peopleId;
+            p.peopleId = p.peopleIdAssign;
+            p.peopleName = peopleName;
+            let id = "name_" + curr_pos.pos_left + "_" + curr_pos.pos_top;
+            document.getElementById(id).innerHTML = peopleName;
+            break;
+        }
+    }
+    closeDialog();
+    console.log(datas);
 }
 
 function untag_it(){
-    console.log("untag it")
+    console.log("untag it: "+ curr_pos.pos_left + ", " + curr_pos.pos_top)
+    let canvas = document.getElementById('canvas');
+
+    for(var i=0;i<datas.length;i++){
+        let p = datas[i];
+        if(p.pos_left === curr_pos.pos_left && p.pos_right === curr_pos.pos_right && p.pos_top === curr_pos.pos_top && p.pos_bottom === curr_pos.pos_bottom) {
+            let rectangle = document.getElementById("face_" + curr_pos.pos_left + "_" + curr_pos.pos_top);
+            let name = document.getElementById("name_" + curr_pos.pos_left + "_" + curr_pos.pos_top);
+            canvas.removeChild(rectangle);
+            canvas.removeChild(name);
+            datas.splice(i, 1);
+            break;
+        }
+    }
+    closeDialog();
+    console.log(datas);
 }
 
 function clean_person(){
@@ -321,8 +436,15 @@ function show_person(peopleId){
         document.getElementById("personName").readOnly = true;
         document.getElementById("shortName").readOnly = true;
         document.getElementById("personIconImg").src = "/view?file=" + person.icon_file_path;
-        console.log(person);
     }else{
         document.getElementById("message").innerHTML = "No record matches.";
+    }
+}
+
+function handle_loaded_people(people){
+    autocomplete(document.getElementById("person"), people);
+    for(var i=0;i<datas.length;i++){
+        let person = datas[i];
+        drawNameBox(person, true, true);
     }
 }
