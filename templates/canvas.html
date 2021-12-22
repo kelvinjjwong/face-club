@@ -16,12 +16,104 @@
             border: 1px solid #FF0000;
             position: absolute;
         }
+
+        /* The Modal (background) */
+        .modal {
+          display: none; /* Hidden by default */
+          position: fixed; /* Stay in place */
+          z-index: 1; /* Sit on top */
+          padding-top: 20px; /* Location of the box */
+          left: 0;
+          top: 0;
+          width: 100%; /* Full width */
+          height: 100%; /* Full height */
+          overflow: auto; /* Enable scroll if needed */
+          background-color: rgb(0,0,0); /* Fallback color */
+          background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        /* Modal Content */
+        .modal-content {
+          position: relative;
+          background-color: #fefefe;
+          margin: auto;
+          padding: 0;
+          border: 1px solid #888;
+          width: 400px;
+          box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+          -webkit-animation-name: animatetop;
+          -webkit-animation-duration: 0.4s;
+          animation-name: animatetop;
+          animation-duration: 0.4s
+        }
+
+        /* Add Animation */
+        @-webkit-keyframes animatetop {
+          from {top:-300px; opacity:0}
+          to {top:0; opacity:1}
+        }
+
+        @keyframes animatetop {
+          from {top:-300px; opacity:0}
+          to {top:0; opacity:1}
+        }
+
+        /* The Close Button */
+        .close {
+          color: white;
+          float: right;
+          font-size: 18px;
+          font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+          color: #000;
+          text-decoration: none;
+          cursor: pointer;
+        }
+
+        .modal-header {
+          padding: 2px 10px;
+          background-color: #5cb85c;
+          color: white;
+        }
+
+        .modal-header h2 {margin: 3px;}
+
+        .modal-body {
+            padding: 2px 2px;
+            height: 90px;
+        }
+
+        .modal-body p {margin: 4px;}
+
+        .modal-footer {
+          padding: 2px 10px;
+          background-color: #5cb85c;
+          color: white;
+        }
+
+        #preview {
+            float: left;
+            width: 80px;
+            height: 80px;
+            padding: 5px;
+        }
+
+        #controls {
+            display: inline-block;
+            padding: 2px;
+            clear: both;
+        }
     </style>
     <script>
+        let curr_pos = {};
+
         let datas = [];
     {% for position in positions %}
         {
-            const item = new Object();
+            const item = {};
             item.pos_top = {{ position.pos_top }};
             item.pos_right = {{ position.pos_right }};
             item.pos_bottom = {{ position.pos_bottom }};
@@ -30,6 +122,7 @@
             item.peopleIdAssign = '{{ position.peopleIdAssign }}';
             item.peopleId = '{{ position.peopleId }}';
             item.peopleName = '{{ position.peopleName }}';
+            item.source = 'db'
             datas.push(item);
         }
     {% endfor %}
@@ -84,16 +177,36 @@
                     element = null;
                     canvas.style.cursor = "default";
                     console.log("finsihed.");
+
+                    curr_pos.pos_right = mouse.x;
+                    curr_pos.pos_bottom = mouse.y;
+                    curr_pos.peopleIdRecognized = '';
+                    curr_pos.peopleIdAssign = 'Unknown';
+                    curr_pos.peopleId = 'Unknown';
+                    curr_pos.peopleName = '';
+                    curr_pos.source = 'draw';
+
+                    console.log(curr_pos);
+                    datas.push(curr_pos);
+                    openDialog(curr_pos);
                 } else {
                     console.log("begun.");
-                    mouse.startX = mouse.x;
-                    mouse.startY = mouse.y;
+                    let x = mouse.x;
+                    let y = mouse.y;
+                    mouse.startX = x;
+                    mouse.startY = y;
                     element = document.createElement('div');
-                    element.className = 'rectangle'
-                    element.style.left = mouse.x + 'px';
-                    element.style.top = mouse.y + 'px';
-                    canvas.appendChild(element)
+                    element.id = 'face_' + x + "_" + y;
+                    element.className = 'rectangle';
+                    element.style.left = x + 'px';
+                    element.style.top = y + 'px';
+                    canvas.appendChild(element);
                     canvas.style.cursor = "crosshair";
+
+                    curr_pos = {};
+                    curr_pos.div = element.id;
+                    curr_pos.pos_left = x;
+                    curr_pos.pos_top = y;
                 }
             }
         }
@@ -104,10 +217,58 @@
             console.log(datas.length)
         }
     </script>
+    <script>
+        function openDialog(item) {
+            // Get the modal
+            var modal = document.getElementById("myModal");
+            // Get the <span> element that closes the modal
+            var span = document.getElementsByClassName("close")[0];
+            // When the user clicks on <span> (x), close the modal
+            span.onclick = function () {
+                modal.style.display = "none";
+            }
+            modal.style.display = "block";
+
+            let canvas = document.getElementById('preview_canvas');
+            let ctx = canvas.getContext('2d');
+            let image = document.getElementById("img");
+            let item_width = item.pos_right - item.pos_left;
+            let item_height = item.pos_bottom - item.pos_top;
+            let scale = 100;
+            if (Math.max(item_width, item_height) > 80) {
+                scale = 80 / Math.max(item_width, item_height) * 100;
+            }
+            ctx.drawImage(image,
+                item.pos_left, item.pos_top,   // Start at 70/20 pixels from the left and the top of the image (crop),
+                item_width, item_height,   // "Get" a `50 * 50` (w * h) area from the source image (crop),
+                0, 0,     // Place the result at 0, 0 in the canvas,
+                scale, scale); // With as width / height: 100 * 100 (scale)
+        }
+    </script>
 </head>
 <body onload="init();">
     <div id="canvas">
-        <img src="/view?file={{ file_path }}" alt="image_with_faces_tagged"/>
+        <img id="img" src="/view?file={{ file_path }}" alt="image_with_faces_tagged"/>
+    </div>
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+      <!-- Modal content -->
+      <div class="modal-content">
+        <div class="modal-header">
+          <span class="close">&times;</span>
+          <h2>Tag this face</h2>
+        </div>
+        <div class="modal-body">
+            <div id="preview">
+                <canvas id="preview_canvas" width="80px" height="80px"></canvas>
+            </div>
+            <div id="controls">
+              <p>Some text in the Modal Body</p>
+              <p>Some other text...</p>
+            </div>
+        </div>
+      </div>
+
     </div>
 </body>
 </html>

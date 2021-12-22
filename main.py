@@ -69,8 +69,8 @@ def end_timing(error=None):
     milliseconds = delta.microseconds / 1000.0
 
     # show final stats of request
-    logger.info("requestId={},method={},path={},nblocks={},block_size={},sleep_ms={},duration={}ms".format(
-        flask.g.id, flask.request.method, flask.request.path, nblocks, block_size, sleep_ms, milliseconds)
+    logger.info("{} {} duration={}ms".format(
+        flask.request.method, flask.request.url, milliseconds)
     )
 
 
