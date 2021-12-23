@@ -127,7 +127,6 @@ function initDraw(canvas) {
                 curr_pos.peopleName = '';
                 curr_pos.source = 'draw';
 
-                console.log(curr_pos);
                 datas.push(curr_pos);
                 openDialog(curr_pos);
 
@@ -175,10 +174,7 @@ function openDialog(item) {
         modal.style.display = "none";
     }
     modal.style.display = "block";
-    document.getElementById("person").value = "";
-    document.getElementById("personName").value = "";
-    document.getElementById("shortName").value = "";
-    document.getElementById("personIconImg").src = unknown_person_icon;
+    clean_person_in_dialog();
 
     let canvas = document.getElementById('preview_canvas');
     let ctx = canvas.getContext('2d');
@@ -197,17 +193,7 @@ function openDialog(item) {
         scale, scale); // With as width / height: 100 * 100 (scale)
 
     if(item.peopleId !== ""){
-        document.getElementById("person").value = item.peopleId;
-        let person = search_person_from_people(item.peopleId);
-        if(person !== null){
-            document.getElementById("personName").value = person.name;
-            document.getElementById("shortName").value = person.shortName;
-            if(person.icon_file_path !== ""){
-                document.getElementById("personIconImg").src = "/view?file=" + person.icon_file_path;
-            }else{
-                document.getElementById("personIconImg").src = unknown_person_icon;
-            }
-        }
+        show_person_in_dialog(item.peopleId);
     }
 
 }
@@ -217,7 +203,7 @@ function openDialog(item) {
  **************************************/
 
 function clean_person_in_dialog(){
-    document.getElementById("message").innerHTML = "";
+    document.getElementById("person").value = "";
     document.getElementById("personName").value = "";
     document.getElementById("shortName").value = "";
     document.getElementById("message").innerHTML = "";
@@ -227,22 +213,22 @@ function clean_person_in_dialog(){
 }
 
 function show_person_in_dialog(peopleId){
-    var person = null;
-    for(var i=0;i<people.length;i++){
-        var p = people[i];
-        if (p.peopleId === peopleId){
-            person = p;
-            break;
+    if(peopleId !== "" && peopleId !== "Unknown") {
+        let person = search_person_from_people(peopleId);
+        if (person != null){
+            document.getElementById("person").value = person.peopleId;
+            document.getElementById("personName").value = person.name;
+            document.getElementById("shortName").value = person.shortName;
+            document.getElementById("personName").readOnly = true;
+            document.getElementById("shortName").readOnly = true;
+            if(person.icon_file_path !== ""){
+                document.getElementById("personIconImg").src = "/view?file=" + person.icon_file_path;
+            }else{
+                document.getElementById("personIconImg").src = unknown_person_icon;
+            }
+        }else{
+            document.getElementById("message").innerHTML = "No record matches.";
         }
-    }
-    if (person != null){
-        document.getElementById("personName").value = person.name;
-        document.getElementById("shortName").value = person.shortName;
-        document.getElementById("personName").readOnly = true;
-        document.getElementById("shortName").readOnly = true;
-        document.getElementById("personIconImg").src = "/view?file=" + person.icon_file_path;
-    }else{
-        document.getElementById("message").innerHTML = "No record matches.";
     }
 }
 
@@ -418,7 +404,6 @@ function tag_it(){
         }
     }
     closeDialog();
-    console.log(datas);
 }
 
 function untag_it(){
@@ -437,7 +422,6 @@ function untag_it(){
         }
     }
     closeDialog();
-    console.log(datas);
 }
 
 /**************************************
@@ -484,7 +468,10 @@ function show_tags() {
 
 function restore_tags() {
     untag_all();
-    datas = datas_backup;
+    datas = []
+    for(var i=0;i<datas_backup.length;i++){
+        datas.push(datas_backup[i]);
+    }
     for(var i=0;i<datas.length;i++) {
         let data = datas[i];
         drawNameBox(data, true, true);

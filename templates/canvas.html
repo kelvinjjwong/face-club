@@ -24,12 +24,15 @@
             datas.push(item);
         }
     {% endfor %}
-        let datas_backup = datas;
+        let datas_backup = []
+        for(var i=0;i<datas.length;i++){
+            datas_backup.push(datas[i]);
+        }
 
         function init() {
             initDraw(document.getElementById('canvas'));
             window.scrollTo(0,0);
-            console.log(datas.length)
+            console.log("initiated " + datas.length + " tags");
             fetchQueryResult("people");
         }
     </script>
