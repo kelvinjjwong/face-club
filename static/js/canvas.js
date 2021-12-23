@@ -225,7 +225,7 @@ function autocomplete(inp, arr) {
         if (!val) {
             return false;
         }
-        clean_person();
+        clean_person_in_dialog();
         currentFocus = -1;
         /*create a DIV element that will contain the items (values):*/
         a = document.createElement("DIV");
@@ -254,7 +254,7 @@ function autocomplete(inp, arr) {
                     /*close the list of autocompleted values,
                     (or any other open lists of autocompleted values:*/
                     closeAllLists();
-                    show_person(inp.value);
+                    show_person_in_dialog(inp.value);
                 });
                 a.appendChild(b);
             }else if (candidate2.substr(0, val.length).toUpperCase() == val.toUpperCase()) {
@@ -272,7 +272,7 @@ function autocomplete(inp, arr) {
                     /*close the list of autocompleted values,
                     (or any other open lists of autocompleted values:*/
                     closeAllLists();
-                    show_person(inp.value);
+                    show_person_in_dialog(inp.value);
                 });
                 a.appendChild(b);
             }else if (candidate3.substr(0, val.length).toUpperCase() == val.toUpperCase()) {
@@ -290,7 +290,7 @@ function autocomplete(inp, arr) {
                     /*close the list of autocompleted values,
                     (or any other open lists of autocompleted values:*/
                     closeAllLists();
-                    show_person(inp.value);
+                    show_person_in_dialog(inp.value);
                 });
                 a.appendChild(b);
             }
@@ -411,7 +411,7 @@ function untag_it(){
     console.log(datas);
 }
 
-function clean_person(){
+function clean_person_in_dialog(){
     document.getElementById("message").innerHTML = "";
     document.getElementById("personName").value = "";
     document.getElementById("shortName").value = "";
@@ -421,7 +421,7 @@ function clean_person(){
     document.getElementById("personIconImg").src = unknown_person_icon;
 }
 
-function show_person(peopleId){
+function show_person_in_dialog(peopleId){
     var person = null;
     for(var i=0;i<people.length;i++){
         var p = people[i];
@@ -446,5 +446,52 @@ function handle_loaded_people(people){
     for(var i=0;i<datas.length;i++){
         let person = datas[i];
         drawNameBox(person, true, true);
+    }
+}
+
+function untag_all(){
+    let canvas = document.getElementById('canvas');
+    for(var i=0;i<datas.length;i++) {
+        let data = datas[i];
+        let rectangle_id = "face_" + data.pos_left + "_" + data.pos_top;
+        let name_id = "name_" + data.pos_left + "_" + data.pos_top;
+        let rectangle = document.getElementById(rectangle_id);
+        let name = document.getElementById(name_id);
+        canvas.removeChild(rectangle);
+        canvas.removeChild(name);
+    }
+    datas = [];
+}
+
+function hide_tags() {
+    for(var i=0;i<datas.length;i++) {
+        let data = datas[i];
+        let rectangle_id = "face_" + data.pos_left + "_" + data.pos_top;
+        let name_id = "name_" + data.pos_left + "_" + data.pos_top;
+        let rectangle = document.getElementById(rectangle_id);
+        let name = document.getElementById(name_id);
+        rectangle.style.display = "none";
+        name.style.display = "none";
+    }
+}
+
+function show_tags() {
+    for(var i=0;i<datas.length;i++) {
+        let data = datas[i];
+        let rectangle_id = "face_" + data.pos_left + "_" + data.pos_top;
+        let name_id = "name_" + data.pos_left + "_" + data.pos_top;
+        let rectangle = document.getElementById(rectangle_id);
+        let name = document.getElementById(name_id);
+        rectangle.style.display = "block";
+        name.style.display = "block";
+    }
+}
+
+function restore_tags() {
+    untag_all();
+    datas = datas_backup;
+    for(var i=0;i<datas.length;i++) {
+        let data = datas[i];
+        drawNameBox(data, true, true);
     }
 }

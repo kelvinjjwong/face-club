@@ -24,6 +24,7 @@
             datas.push(item);
         }
     {% endfor %}
+        let datas_backup = datas;
 
         function init() {
             initDraw(document.getElementById('canvas'));
@@ -36,6 +37,12 @@
 <body onload="init();">
     <div id="canvas">
         <img id="img" src="/view?file={{ file_path }}" alt="image_with_faces_tagged"/>
+    </div>
+    <div id="canvasSidenav" class="sidenav">
+      <a href="#" id="navUntagAll" onclick="untag_all()">Untag ALL</a>
+      <a href="#" id="navHideTags" onclick="hide_tags()">Hide Tags</a>
+      <a href="#" id="navShowTags" onclick="show_tags()">Show Tags</a>
+      <a href="#" id="navRestore" onclick="restore_tags()">Restore</a>
     </div>
     <!-- The Modal -->
     <div id="myModal" class="modal">
