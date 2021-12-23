@@ -57,17 +57,17 @@ class FaceDatabase:
         """)
         self.logger.info("Dropped face db schema")
 
-    def insert_face(self, face):
+    def insert_image(self, face):
         self.logger.info("inserting image record %s" % face)
         conn = self.engine.connect()
         conn.execute(self.faces.insert(), face)
 
-    def delete_face(self, face):
+    def delete_image(self, face):
         self.logger.info("deleting image record %s" % face)
         conn = self.engine.connect()
         conn.execute(self.faces.delete(), face)
 
-    def get_face(self, imageId, conn=None):
+    def get_image(self, imageId, conn=None):
         self.logger.info("getting image record %s" % imageId)
         if conn is None:
             conn = self.engine.connect()
@@ -98,12 +98,12 @@ class FaceDatabase:
             self.logger.error("face record not found: %s" % imageId)
             return None
 
-    def delete_all_faces(self):
+    def delete_all_images(self):
         self.logger.info("deleting all images from face db")
         conn = self.engine.connect()
         conn.execute("DELETE FROM faces")
 
-    def get_faces(self, limit=100, offset=0):
+    def get_images(self, limit=100, offset=0):
         self.logger.info("getting image records with limit=%s offset=%s" % (limit, offset))
         faces = []
         conn = self.engine.connect()
@@ -163,7 +163,7 @@ class FaceDatabase:
 
     def toggle_sample(self, imageId):
         conn = self.engine.connect()
-        face = self.get_face(imageId, conn=conn)
+        face = self.get_image(imageId, conn=conn)
         if face is not None:
             u = self.faces.update().where(self.faces.c.imageId == imageId).values(sample=(not face['sample']))
             print(u.compile(compile_kwargs={"literal_binds": True}))
@@ -174,7 +174,7 @@ class FaceDatabase:
 
     def toggle_scan_result(self, imageId):
         conn = self.engine.connect()
-        face = self.get_face(imageId, conn=conn)
+        face = self.get_image(imageId, conn=conn)
         if face is not None:
             u = self.faces.update().where(self.faces.c.imageId == imageId).values(scanWrong=(not face['scanWrong']))
             print(u.compile(compile_kwargs={"literal_binds": True}))
@@ -183,9 +183,9 @@ class FaceDatabase:
         else:
             self.logger.error("image record not found: %s" % imageId)
 
-    def update_face(self, imageId, localFilePath, resizedFilePath, taggedFilePath, peopleIdRecognized):
+    def update_image(self, imageId, localFilePath, resizedFilePath, taggedFilePath, peopleIdRecognized):
         conn = self.engine.connect()
-        face = self.get_face(imageId, conn=conn)
+        face = self.get_image(imageId, conn=conn)
         if face is not None:
             u = self.faces.update() \
                 .where(self.faces.c.imageId == imageId) \
@@ -202,9 +202,9 @@ class FaceDatabase:
         else:
             self.logger.error("image record not found: %s" % imageId)
 
-    def assign_face(self, imageId, peopleIdAssign):
+    def assign_face_to_image(self, imageId, peopleIdAssign):
         conn = self.engine.connect()
-        face = self.get_face(imageId, conn=conn)
+        face = self.get_image(imageId, conn=conn)
         if face is not None:
             u = self.faces.update() \
                 .where(self.faces.c.imageId == imageId) \

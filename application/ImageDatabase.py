@@ -109,3 +109,39 @@ SELECT * from "People"
         self.logger.info("got %i people db records" % len(values))
         await conn.close()
         return values
+
+    async def get_person(self, peopleId: str):
+        conn = await asyncpg.connect(user=self.username,
+                                     password=self.password,
+                                     database=self.database,
+                                     host=self.host)
+        values = await conn.fetch(
+            """
+SELECT * from "People" where "peopleId" = $1
+            """, peopleId
+        )
+        self.logger.info("got %i person db record" % len(values))
+        await conn.close()
+        if len(values) > 0:
+            person = values[0]
+            return {
+                'peopleId': person["id"],
+                'personName': person["name"],
+                'shortName': person["shortName"]
+            }
+        else:
+            return None
+
+    async def create_person(self, peopleId: str, personName: str, shortName: str):
+            conn = await asyncpg.connect(user=self.username,
+                                         password=self.password,
+                                         database=self.database,
+                                         host=self.host)
+            values = await conn.fetch(
+                """
+    INSERT INTO "People" ("id", "name", "shortName") VALUES ($1, $2, $3)
+                """, peopleId, personName, shortName
+            )
+            self.logger.info("Created 1 person %s" % peopleId)
+
+

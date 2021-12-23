@@ -120,7 +120,7 @@ class FaceClub:
                 self.logger.info("External volume is mounted.")
             incoming_faces = self.workspace.fromImageRepositoryToWorkspace(external_records)
             for face in incoming_faces:
-                self.faceDatabase.insert_face(face)
+                self.faceDatabase.insert_image(face)
             msg = "Processed %s image records" % len(incoming_faces)
             self.logger.info(msg)
             return True, incoming_faces
@@ -150,7 +150,7 @@ class FaceClub:
             "time_cost_sec": 0,
             "pic_size": ""
         })
-        records = self.faceDatabase.get_faces(limit=limit)
+        records = self.faceDatabase.get_images(limit=limit)
         yield to_json({
             "recognition_progress": "0/{}".format(len(records)),
             "peopleId": "",
@@ -189,7 +189,7 @@ class FaceClub:
                 people, positions, width, height, resized_file_path, tagged_file_path = self.faceRecognizer.recognize_image(model_data, file_path, output=True)
                 finished = datetime.now()
                 delta = (finished - started)
-                self.faceDatabase.update_face(record["imageId"], file_path, resized_file_path, tagged_file_path, ",".join(people))
+                self.faceDatabase.update_image(record["imageId"], file_path, resized_file_path, tagged_file_path, ",".join(people))
                 for position in positions:
                     # TODO search name and nick name by peopleId
                     personName = ''

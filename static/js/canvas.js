@@ -403,6 +403,17 @@ function tag_it(){
             break;
         }
     }
+
+    fetchQueryResult("tag", {
+        'peopleId': peopleId,
+        'personName': peopleName,
+        'shortName': shortName,
+        'left': curr_pos.pos_left,
+        'top': curr_pos.pos_top,
+        'bottom': curr_pos.pos_bottom,
+        'right': curr_pos.pos_right,
+        'imageId': '' // FIXME imageID
+    })
     closeDialog();
 }
 
@@ -421,6 +432,17 @@ function untag_it(){
             break;
         }
     }
+
+    fetchQueryResult("untag", {
+        'peopleId': peopleId,
+        'personName': peopleName,
+        'shortName': shortName,
+        'left': curr_pos.pos_left,
+        'top': curr_pos.pos_top,
+        'bottom': curr_pos.pos_bottom,
+        'right': curr_pos.pos_right,
+        'imageId': '' // FIXME imageID
+    })
     closeDialog();
 }
 
@@ -440,6 +462,9 @@ function untag_all(){
         canvas.removeChild(name);
     }
     datas = [];
+
+    fetchQueryResult("untag_all", '') // FIXME imageID
+
 }
 
 function hide_tags() {
@@ -475,6 +500,16 @@ function restore_tags() {
     for(var i=0;i<datas.length;i++) {
         let data = datas[i];
         drawNameBox(data, true, true);
+        fetchQueryResult("tag", {
+            'peopleId': data.peopleId,
+            'personName': data.peopleName,
+            'shortName': data.shortName,
+            'left': data.pos_left,
+            'top': data.pos_top,
+            'bottom': data.pos_bottom,
+            'right': data.pos_right,
+            'imageId': '' // FIXME imageID
+        })
     }
 }
 
@@ -510,6 +545,22 @@ let fetchQueryResult = (action, id) => {
     if (action === "people"){
         xmlHttp.open("GET", "/people", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
+    }else if (action === "tag"){
+        xmlHttp.open("POST", "/tag", true);
+        xmlHttp.setRequestHeader("Content-type", "application/json");
+        xmlHttp.send(id);
+    }else if (action === "untag"){
+        xmlHttp.open("POST", "/untag", true);
+        xmlHttp.setRequestHeader("Content-type", "application/json");
+        xmlHttp.send(id);
+    }else if (action === "tag_persons"){
+        xmlHttp.open("POST", "/tag/persons", true);
+        xmlHttp.setRequestHeader("Content-type", "application/json");
+        xmlHttp.send(id);
+    }else if (action === "untag_all"){
+        xmlHttp.open("GET", "/untag/all/" + id, true);
+        xmlHttp.setRequestHeader("Content-type", "application/json");
         xmlHttp.send();
     }
 }
