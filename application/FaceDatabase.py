@@ -334,3 +334,23 @@ class FaceDatabase:
                 'peopleName': personName,
                 'shortName': shortName
             })
+
+    def delete_positions(self, imageId: str):
+        conn = self.engine.connect()
+        conn.execute("""
+                    DELETE FROM positions 
+                    WHERE imageId=$1
+                    """, imageId)
+
+    def delete_position(self, imageId: str, top: int, right: int, bottom: int, left: int):
+        conn = self.engine.connect()
+        conn.execute("""
+                    DELETE FROM positions 
+                    WHERE imageId=$1 AND pos_top=$7 AND pos_right=$8 AND pos_bottom=$9 AND pos_left=$10
+                    """, imageId, top, right, bottom, left)
+
+    def update_positions(self, imageId: str, positions):
+        self.delete_positions(imageId)
+        for position in positions:
+            self.insert_position(position)
+
