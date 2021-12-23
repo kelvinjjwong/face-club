@@ -191,10 +191,13 @@ class FaceClub:
                 delta = (finished - started)
                 self.faceDatabase.update_face(record["imageId"], file_path, resized_file_path, tagged_file_path, ",".join(people))
                 for position in positions:
-                    self.faceDatabase.update_position(record["imageId"],
-                                                      position['top'], position['right'],
-                                                      position['bottom'], position['left'],
-                                                      position['peopleId'], '')
+                    # TODO search name and nick name by peopleId
+                    personName = ''
+                    shortName = ''
+                    self.faceDatabase.recognize_position(record["imageId"],
+                                                         position['top'], position['right'],
+                                                         position['bottom'], position['left'],
+                                                         position['peopleId'], personName, shortName)
                 yield to_json({
                     "recognition_progress": "{}/{}".format(i, len(records)),
                     "peopleId": ",".join(people),

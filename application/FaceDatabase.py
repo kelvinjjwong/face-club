@@ -39,7 +39,8 @@ class FaceDatabase:
                                Column("peopleIdRecognized", String(50)),
                                Column("peopleIdAssign", String(50)),
                                Column("peopleId", String(50)),
-                               Column("peopleName", String(50))
+                               Column("peopleName", String(50)),
+                               Column("shortName", String(50))
                                )
 
     def initSchema(self):
@@ -216,6 +217,29 @@ class FaceDatabase:
         else:
             self.logger.error("image record not found: %s" % imageId)
 
+    def get_positions(self, imageId, conn=None):
+        positions = []
+        if conn is None:
+            conn = self.engine.connect()
+        s = select(self.positions).where(self.positions.c.imageId == imageId)
+        print(s.compile(compile_kwargs={"literal_binds": True}))
+        result = conn.execute(s)
+        for imageId, pos_top, pos_right, pos_bottom, pos_left, peopleIdRecognized, peopleIdAssign, peopleId, peopleName, shortName in result:
+            position = {
+                'imageId': imageId,
+                'pos_top': pos_top,
+                'pos_right': pos_right,
+                'pos_bottom': pos_bottom,
+                'pos_left': pos_left,
+                'peopleIdRecognized': peopleIdRecognized,
+                'peopleIdAssign': peopleIdAssign,
+                'peopleId': peopleId,
+                'peopleName': peopleName,
+                'shortName': shortName
+            }
+            positions.append(position)
+        return positions
+
     def get_position(self, imageId: str, top: int, right: int, bottom: int, left: int, conn=None):
         self.logger.info("getting position record: imageId=%s top=%s right=%s bottom=%s left=%s"
                          % (imageId, top, right, bottom, left))
@@ -243,7 +267,8 @@ class FaceDatabase:
                 'peopleIdRecognized': row["peopleIdRecognized"],
                 'peopleIdAssign': row["peopleIdAssign"],
                 'peopleId': row["peopleId"],
-                'peopleName': row["peopleName"]
+                'peopleName': row["peopleName"],
+                'shortName': row["shortName"]
             }
             self.logger.info(position)
             result.close()
@@ -258,26 +283,18 @@ class FaceDatabase:
         conn = self.engine.connect()
         conn.execute(self.positions.insert(), position)
 
-    def update_position(self, imageId: str, top: int, right: int, bottom: int, left: int,
-                        peopleIdRecognized: str, peopleIdAssign: str):
-        peopleId = ''
-        if peopleIdAssign != '':
-            peopleId = peopleIdAssign
-        elif peopleIdRecognized != '':
-            peopleId = peopleIdRecognized
-
-        # TODO map name to peopleId
-        peopleName = ''
+    def recognize_position(self, imageId: str, top: int, right: int, bottom: int, left: int,
+                           peopleIdRecognized: str, personName: str, shortName: str):
 
         conn = self.engine.connect()
         position = self.get_position(imageId, top, right, bottom, left, conn=conn)
         if position is not None:
             conn.execute("""
-            UPDATE positions SET peopleIdRecognized=$1, peopleIdAssign=$2, peopleId=$3, peopleName=$4
-            WHERE imageId=$5 AND pos_top=$6 AND pos_right=$7 AND pos_bottom=$8 AND pos_left=$9
-                    """, peopleIdRecognized, peopleIdAssign, peopleId, peopleName, imageId, top, right, bottom, left)
-            self.logger.info("updated position with imageId=%s top=%s right=%s bottom=%s left=%s"
-                             % (imageId, top, right, bottom, left))
+            UPDATE positions SET peopleIdRecognized=$1, peopleName=$4, shortName=$5,
+            WHERE imageId=$6 AND pos_top=$7 AND pos_right=$8 AND pos_bottom=$9 AND pos_left=$10
+                    """, peopleIdRecognized, personName, shortName, imageId, top, right, bottom, left)
+            self.logger.info("Recognized position with imageId=%s top=%s right=%s bottom=%s left=%s peopleIdRecognized=%s"
+                             % (imageId, top, right, bottom, left, peopleIdRecognized))
         else:
             self.insert_position({
                 'imageId': imageId,
@@ -286,29 +303,34 @@ class FaceDatabase:
                 'pos_bottom': bottom,
                 'pos_left': left,
                 'peopleIdRecognized': peopleIdRecognized,
-                'peopleIdAssign': peopleIdAssign,
-                'peopleId': peopleId,
-                'peopleName': peopleName
+                'peopleIdAssign': '',
+                'peopleId': '',
+                'peopleName': personName,
+                'shortName': shortName
             })
 
-    def get_positions(self, imageId, conn=None):
-        positions = []
-        if conn is None:
-            conn = self.engine.connect()
-        s = select(self.positions).where(self.positions.c.imageId == imageId)
-        print(s.compile(compile_kwargs={"literal_binds": True}))
-        result = conn.execute(s)
-        for imageId, pos_top, pos_right, pos_bottom, pos_left, peopleIdRecognized, peopleIdAssign, peopleId, peopleName in result:
-            position = {
+    def assign_position(self, imageId: str, top: int, right: int, bottom: int, left: int,
+                           peopleIdAssign: str, personName: str, shortName: str):
+
+        conn = self.engine.connect()
+        position = self.get_position(imageId, top, right, bottom, left, conn=conn)
+        if position is not None:
+            conn.execute("""
+            UPDATE positions SET peopleIdAssign=$1, peopleName=$4, shortName=$5,
+            WHERE imageId=$6 AND pos_top=$7 AND pos_right=$8 AND pos_bottom=$9 AND pos_left=$10
+                    """, peopleIdAssign, personName, shortName, imageId, top, right, bottom, left)
+            self.logger.info("Assigned position with imageId=%s top=%s right=%s bottom=%s left=%s peopleIdAssign=%s"
+                             % (imageId, top, right, bottom, left, peopleIdAssign))
+        else:
+            self.insert_position({
                 'imageId': imageId,
-                'pos_top': pos_top,
-                'pos_right': pos_right,
-                'pos_bottom': pos_bottom,
-                'pos_left': pos_left,
-                'peopleIdRecognized': peopleIdRecognized,
+                'pos_top': top,
+                'pos_right': right,
+                'pos_bottom': bottom,
+                'pos_left': left,
+                'peopleIdRecognized': '',
                 'peopleIdAssign': peopleIdAssign,
-                'peopleId': peopleId,
-                'peopleName': peopleName
-            }
-            positions.append(position)
-        return positions
+                'peopleId': '',
+                'peopleName': personName,
+                'shortName': shortName
+            })

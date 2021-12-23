@@ -48,7 +48,7 @@ class Workspace:
             rec = {
                 "imageId": image["id"],
                 "sourcePath": src_file,
-                "localFilePath": '',
+                "localFilePath": dest_file,
                 "resizedFilePath": '',
                 "taggedFilePath": '',
                 "fileExt": extension,
