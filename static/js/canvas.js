@@ -1,6 +1,33 @@
 
-let curr_pos = {};
+/**************************************
+    Preload people name list
+ **************************************/
 let people = [];
+
+function search_person_from_people(peopleId) {
+    var person = null;
+    for(var i=0;i<people.length;i++){
+        var p = people[i];
+        if (p.peopleId === peopleId){
+            person = p;
+            break;
+        }
+    }
+    return person;
+}
+
+function handle_loaded_people(people){
+    autocomplete(document.getElementById("person"), people);
+    for(var i=0;i<datas.length;i++){
+        let person = datas[i];
+        drawNameBox(person, true, true);
+    }
+}
+
+/**************************************
+    Draw Rectangle and Name Label
+ **************************************/
+let curr_pos = {};
 
 function inBox(x, y) {
     for(var i=0;i<datas.length;i++){
@@ -129,6 +156,10 @@ function initDraw(canvas) {
     }
 }
 
+/*********************
+    Dialog
+ *********************/
+
 function closeDialog() {
     var modal = document.getElementById("myModal");
     modal.style.display = "none";
@@ -181,37 +212,43 @@ function openDialog(item) {
 
 }
 
-let fetchQueryResult = (action, id) => {
-    const xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = function () {
-        if (xmlHttp.readyState === 4) {
-            if (xmlHttp.status === 200) {
-                //console.log(xmlHttp.responseText);
-                let data = JSON.parse(xmlHttp.responseText);
-                if (! Array.isArray(data)) {
-                    data = JSON.parse("[" + xmlHttp.responseText +"]")
-                }
-                if (action === "people"){
-                    people = data;
-                    handle_loaded_people(people);
+/**************************************
+    Dialog Text Fields
+ **************************************/
 
-                }else{
-                    console.log(data);
-                }
-            }else{
-                const data = xmlHttp.responseText;
-                console.log(data);
-            }
+function clean_person_in_dialog(){
+    document.getElementById("message").innerHTML = "";
+    document.getElementById("personName").value = "";
+    document.getElementById("shortName").value = "";
+    document.getElementById("message").innerHTML = "";
+    document.getElementById("personName").removeAttribute("readOnly");
+    document.getElementById("shortName").removeAttribute("readOnly");
+    document.getElementById("personIconImg").src = unknown_person_icon;
+}
+
+function show_person_in_dialog(peopleId){
+    var person = null;
+    for(var i=0;i<people.length;i++){
+        var p = people[i];
+        if (p.peopleId === peopleId){
+            person = p;
+            break;
         }
-    };
-
-    //document.getElementById("msg").innerText = "Executing ...";
-    if (action === "people"){
-        xmlHttp.open("GET", "/people", true);
-        xmlHttp.setRequestHeader("Content-type", "text/plain");
-        xmlHttp.send();
+    }
+    if (person != null){
+        document.getElementById("personName").value = person.name;
+        document.getElementById("shortName").value = person.shortName;
+        document.getElementById("personName").readOnly = true;
+        document.getElementById("shortName").readOnly = true;
+        document.getElementById("personIconImg").src = "/view?file=" + person.icon_file_path;
+    }else{
+        document.getElementById("message").innerHTML = "No record matches.";
     }
 }
+
+/**************************************
+    Dialog Text Field Autocomplete
+ **************************************/
 
 function autocomplete(inp, arr) {
     /*the autocomplete function takes two arguments,
@@ -357,17 +394,9 @@ function autocomplete(inp, arr) {
     });
 }
 
-function search_person_from_people(peopleId) {
-    var person = null;
-    for(var i=0;i<people.length;i++){
-        var p = people[i];
-        if (p.peopleId === peopleId){
-            person = p;
-            break;
-        }
-    }
-    return person;
-}
+/**************************************
+    Dialog Buttons
+ **************************************/
 
 function tag_it(){
     console.log("tag it")
@@ -411,43 +440,9 @@ function untag_it(){
     console.log(datas);
 }
 
-function clean_person_in_dialog(){
-    document.getElementById("message").innerHTML = "";
-    document.getElementById("personName").value = "";
-    document.getElementById("shortName").value = "";
-    document.getElementById("message").innerHTML = "";
-    document.getElementById("personName").removeAttribute("readOnly");
-    document.getElementById("shortName").removeAttribute("readOnly");
-    document.getElementById("personIconImg").src = unknown_person_icon;
-}
-
-function show_person_in_dialog(peopleId){
-    var person = null;
-    for(var i=0;i<people.length;i++){
-        var p = people[i];
-        if (p.peopleId === peopleId){
-            person = p;
-            break;
-        }
-    }
-    if (person != null){
-        document.getElementById("personName").value = person.name;
-        document.getElementById("shortName").value = person.shortName;
-        document.getElementById("personName").readOnly = true;
-        document.getElementById("shortName").readOnly = true;
-        document.getElementById("personIconImg").src = "/view?file=" + person.icon_file_path;
-    }else{
-        document.getElementById("message").innerHTML = "No record matches.";
-    }
-}
-
-function handle_loaded_people(people){
-    autocomplete(document.getElementById("person"), people);
-    for(var i=0;i<datas.length;i++){
-        let person = datas[i];
-        drawNameBox(person, true, true);
-    }
-}
+/**************************************
+    SideNav Buttons
+ **************************************/
 
 function untag_all(){
     let canvas = document.getElementById('canvas');
@@ -493,5 +488,41 @@ function restore_tags() {
     for(var i=0;i<datas.length;i++) {
         let data = datas[i];
         drawNameBox(data, true, true);
+    }
+}
+
+/**************************************
+    Web API calls
+ **************************************/
+
+let fetchQueryResult = (action, id) => {
+    const xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function () {
+        if (xmlHttp.readyState === 4) {
+            if (xmlHttp.status === 200) {
+                //console.log(xmlHttp.responseText);
+                let data = JSON.parse(xmlHttp.responseText);
+                if (! Array.isArray(data)) {
+                    data = JSON.parse("[" + xmlHttp.responseText +"]")
+                }
+                if (action === "people"){
+                    people = data;
+                    handle_loaded_people(people);
+
+                }else{
+                    console.log(data);
+                }
+            }else{
+                const data = xmlHttp.responseText;
+                console.log(data);
+            }
+        }
+    };
+
+    //document.getElementById("msg").innerText = "Executing ...";
+    if (action === "people"){
+        xmlHttp.open("GET", "/people", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
     }
 }
