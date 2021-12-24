@@ -14,9 +14,9 @@ Target environment: macOS
 - db: sqlalchemy(sqlite3), asyncpg
 - schedule: apscheduler
 
-## Backend dependency:
+## Database:
 
-- Will connect to PostgreSQL database used by ImageDocker
+- Will connect to a PostgreSQL database maintained by ImageDocker
 - Will maintain a SQLite database locally
 
 ## Environment setup:
