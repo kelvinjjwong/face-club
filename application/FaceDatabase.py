@@ -7,41 +7,41 @@ import logging
 class FaceDatabase:
     logger = None
     engine = None
+    images = None
     faces = None
-    positions = None
     metadata = None
 
     def __init__(self, url):
         self.logger = logging.getLogger('DB')
         self.engine = create_engine(url)
         self.metadata = MetaData()
+        self.images = Table('images', self.metadata,
+                            Column('imageId', String(50), primary_key=True),
+                            Column("sourcePath", Text),
+                            Column("localFilePath", Text),
+                            Column("resizedFilePath", Text),
+                            Column("taggedFilePath", Text),
+                            Column("fileExt", String(10)),
+                            Column("peopleId", Text),
+                            Column("peopleIdRecognized", Text),
+                            Column("peopleIdAssign", Text),
+                            Column("imageYear", Integer),
+                            Column("sample", Boolean),
+                            Column("scanned", Boolean),
+                            Column("scanWrong", Boolean)
+                            )
         self.faces = Table('faces', self.metadata,
-                           Column('imageId', String(50), primary_key=True),
-                           Column("sourcePath", Text),
-                           Column("localFilePath", Text),
-                           Column("resizedFilePath", Text),
-                           Column("taggedFilePath", Text),
-                           Column("fileExt", String(10)),
-                           Column("peopleId", Text),
-                           Column("peopleIdRecognized", Text),
-                           Column("peopleIdAssign", Text),
-                           Column("imageYear", Integer),
-                           Column("sample", Boolean),
-                           Column("scanned", Boolean),
-                           Column("scanWrong", Boolean)
+                           Column("imageId", String(50)),
+                           Column("pos_top", String(50)),
+                           Column("pos_right", String(50)),
+                           Column("pos_bottom", String(50)),
+                           Column("pos_left", String(50)),
+                           Column("peopleIdRecognized", String(50)),
+                           Column("peopleIdAssign", String(50)),
+                           Column("peopleId", String(50)),
+                           Column("peopleName", String(50)),
+                           Column("shortName", String(50))
                            )
-        self.positions = Table('positions', self.metadata,
-                               Column("imageId", String(50)),
-                               Column("pos_top", String(50)),
-                               Column("pos_right", String(50)),
-                               Column("pos_bottom", String(50)),
-                               Column("pos_left", String(50)),
-                               Column("peopleIdRecognized", String(50)),
-                               Column("peopleIdAssign", String(50)),
-                               Column("peopleId", String(50)),
-                               Column("peopleName", String(50)),
-                               Column("shortName", String(50))
-                               )
 
     def initSchema(self):
         self.metadata.create_all(self.engine)
@@ -50,33 +50,33 @@ class FaceDatabase:
     def dropSchema(self):
         conn = self.engine.connect()
         conn.execute("""
-        DROP TABLE IF EXISTS faces
+        DROP TABLE IF EXISTS images
         """)
         conn.execute("""
-        DROP TABLE IF EXISTS positions
+        DROP TABLE IF EXISTS faces
         """)
         self.logger.info("Dropped face db schema")
 
     def insert_image(self, face):
         self.logger.info("inserting image record %s" % face)
         conn = self.engine.connect()
-        conn.execute(self.faces.insert(), face)
+        conn.execute(self.images.insert(), face)
 
     def delete_image(self, face):
         self.logger.info("deleting image record %s" % face)
         conn = self.engine.connect()
-        conn.execute(self.faces.delete(), face)
+        conn.execute(self.images.delete(), face)
 
     def get_image(self, imageId, conn=None):
         self.logger.info("getting image record %s" % imageId)
         if conn is None:
             conn = self.engine.connect()
-        s = select(self.faces).where(self.faces.c.imageId == imageId)
+        s = select(self.images).where(self.images.c.imageId == imageId)
         print(s.compile(compile_kwargs={"literal_binds": True}))
         result = conn.execute(s)
         row = result.fetchone()
         if row is not None:
-            face = {
+            image = {
                 'imageId': row["imageId"],
                 'sourcePath': row["sourcePath"],
                 'localFilePath': row["localFilePath"],
@@ -91,29 +91,29 @@ class FaceDatabase:
                 'scanned': row["scanned"],
                 'scanWrong': row["scanWrong"]
             }
-            self.logger.info(face)
+            self.logger.info(image)
             result.close()
-            return face
+            return image
         else:
-            self.logger.error("face record not found: %s" % imageId)
+            self.logger.error("image record not found: %s" % imageId)
             return None
 
     def delete_all_images(self):
         self.logger.info("deleting all images from face db")
         conn = self.engine.connect()
-        conn.execute("DELETE FROM faces")
+        conn.execute("DELETE FROM images")
 
     def get_images(self, limit=100, offset=0):
         self.logger.info("getting image records with limit=%s offset=%s" % (limit, offset))
-        faces = []
+        images = []
         conn = self.engine.connect()
         result = conn.execute("""
-        SELECT * FROM faces 
+        SELECT * FROM images 
         ORDER BY imageYear ASC, sourcePath ASC 
         LIMIT %s OFFSET %s
         """ % (limit, offset))
         for imageId, sourcePath, localFilePath, resizedFilePath, taggedFilePath, fileExt, peopleId, peopleIdRecognized, peopleIdAssign, imageYear, sample, scanned, scanWrong in result:
-            face = {
+            image = {
                 'localFilePath': localFilePath,
                 'resizedFilePath': resizedFilePath,
                 'taggedFilePath': taggedFilePath,
@@ -128,21 +128,21 @@ class FaceDatabase:
                 'fileExt': fileExt,
                 'imageYear': imageYear
             }
-            faces.append(face)
-        self.logger.info("got %s face records" % len(faces))
-        return faces
+            images.append(image)
+        self.logger.info("got %s image records" % len(images))
+        return images
 
     def get_scanned_faces(self, limit=100, offset=0):
         self.logger.info("getting image records with limit=%s offset=%s" % (limit, offset))
-        faces = []
+        images = []
         conn = self.engine.connect()
         result = conn.execute("""
-        SELECT * FROM faces WHERE scanned=1 AND taggedFilePath <> ''
+        SELECT * FROM images WHERE scanned=1 AND taggedFilePath <> ''
         ORDER BY imageYear ASC, sourcePath ASC 
         LIMIT %s OFFSET %s
         """ % (limit, offset))
         for imageId, sourcePath, localFilePath, resizedFilePath, taggedFilePath, fileExt, peopleId, peopleIdRecognized, peopleIdAssign, imageYear, sample, scanned, scanWrong in result:
-            face = {
+            image = {
                 'localFilePath': localFilePath,
                 'resizedFilePath': resizedFilePath,
                 'taggedFilePath': taggedFilePath,
@@ -157,15 +157,15 @@ class FaceDatabase:
                 'fileExt': fileExt,
                 'imageYear': imageYear
             }
-            faces.append(face)
-        self.logger.info("got %s face records" % len(faces))
-        return faces
+            images.append(image)
+        self.logger.info("got %s image records" % len(images))
+        return images
 
     def toggle_sample(self, imageId):
         conn = self.engine.connect()
         face = self.get_image(imageId, conn=conn)
         if face is not None:
-            u = self.faces.update().where(self.faces.c.imageId == imageId).values(sample=(not face['sample']))
+            u = self.images.update().where(self.images.c.imageId == imageId).values(sample=(not face['sample']))
             print(u.compile(compile_kwargs={"literal_binds": True}))
             conn.execute(u)
             self.logger.info("updated image with imageId=%s sample=%s" % (imageId, face['sample']))
@@ -176,23 +176,24 @@ class FaceDatabase:
         conn = self.engine.connect()
         face = self.get_image(imageId, conn=conn)
         if face is not None:
-            u = self.faces.update().where(self.faces.c.imageId == imageId).values(scanWrong=(not face['scanWrong']))
+            u = self.images.update().where(self.images.c.imageId == imageId).values(scanWrong=(not face['scanWrong']))
             print(u.compile(compile_kwargs={"literal_binds": True}))
             conn.execute(u)
             self.logger.info("updated image with imageId=%s scanWrong=%s" % (imageId, face['scanWrong']))
         else:
             self.logger.error("image record not found: %s" % imageId)
 
-    def update_image(self, imageId, localFilePath, resizedFilePath, taggedFilePath, peopleIdRecognized):
+    def recognize_face_in_image(self, imageId, localFilePath, resizedFilePath, taggedFilePath, peopleIdRecognized):
         conn = self.engine.connect()
-        face = self.get_image(imageId, conn=conn)
-        if face is not None:
-            u = self.faces.update() \
-                .where(self.faces.c.imageId == imageId) \
+        image = self.get_image(imageId, conn=conn)
+        if image is not None:
+            u = self.images.update() \
+                .where(self.images.c.imageId == imageId) \
                 .values(
                 localFilePath=localFilePath,
                 resizedFilePath=resizedFilePath,
                 taggedFilePath=taggedFilePath,
+                peopleId=self.determine_peopleId(peopleIdRecognized, image['peopleIdAssign']),
                 peopleIdRecognized=peopleIdRecognized,
                 scanned=1
             )
@@ -204,28 +205,29 @@ class FaceDatabase:
 
     def assign_face_to_image(self, imageId, peopleIdAssign):
         conn = self.engine.connect()
-        face = self.get_image(imageId, conn=conn)
-        if face is not None:
-            u = self.faces.update() \
-                .where(self.faces.c.imageId == imageId) \
+        image = self.get_image(imageId, conn=conn)
+        if image is not None:
+            u = self.images.update() \
+                .where(self.images.c.imageId == imageId) \
                 .values(
-                peopleIdAssign=peopleIdAssign
+                peopleIdAssign=peopleIdAssign,
+                peopleId=self.determine_peopleId(image['peopleIdRecognized'], peopleIdAssign)
             )
             print(u.compile(compile_kwargs={"literal_binds": True}))
             conn.execute(u)
-            self.logger.info("updated image with imageId=%s scanWrong=%s" % (imageId, face['scanWrong']))
+            self.logger.info("updated image with imageId=%s scanWrong=%s" % (imageId, image['scanWrong']))
         else:
             self.logger.error("image record not found: %s" % imageId)
 
-    def get_positions(self, imageId, conn=None):
-        positions = []
+    def get_faces(self, imageId, conn=None):
+        faces = []
         if conn is None:
             conn = self.engine.connect()
-        s = select(self.positions).where(self.positions.c.imageId == imageId)
+        s = select(self.faces).where(self.faces.c.imageId == imageId)
         print(s.compile(compile_kwargs={"literal_binds": True}))
         result = conn.execute(s)
         for imageId, pos_top, pos_right, pos_bottom, pos_left, peopleIdRecognized, peopleIdAssign, peopleId, peopleName, shortName in result:
-            position = {
+            face = {
                 'imageId': imageId,
                 'pos_top': pos_top,
                 'pos_right': pos_right,
@@ -237,28 +239,28 @@ class FaceDatabase:
                 'peopleName': peopleName,
                 'shortName': shortName
             }
-            positions.append(position)
-        return positions
+            faces.append(face)
+        return faces
 
-    def get_position(self, imageId: str, top: int, right: int, bottom: int, left: int, conn=None):
-        self.logger.info("getting position record: imageId=%s top=%s right=%s bottom=%s left=%s"
+    def get_face(self, imageId: str, top: int, right: int, bottom: int, left: int, conn=None):
+        self.logger.info("getting face record: imageId=%s top=%s right=%s bottom=%s left=%s"
                          % (imageId, top, right, bottom, left))
         if conn is None:
             conn = self.engine.connect()
-        s = select(self.positions).where(
+        s = select(self.faces).where(
             and_(
-                self.positions.c.imageId == imageId,
-                self.positions.c.pos_top == top,
-                self.positions.c.pos_right == right,
-                self.positions.c.pos_bottom == bottom,
-                self.positions.c.pos_left == left
+                self.faces.c.imageId == imageId,
+                self.faces.c.pos_top == top,
+                self.faces.c.pos_right == right,
+                self.faces.c.pos_bottom == bottom,
+                self.faces.c.pos_left == left
             )
         )
         print(s.compile(compile_kwargs={"literal_binds": True}))
         result = conn.execute(s)
         row = result.fetchone()
         if row is not None:
-            position = {
+            face = {
                 'imageId': row["imageId"],
                 'pos_top': row["pos_top"],
                 'pos_right': row["pos_right"],
@@ -270,33 +272,42 @@ class FaceDatabase:
                 'peopleName': row["peopleName"],
                 'shortName': row["shortName"]
             }
-            self.logger.info(position)
+            self.logger.info(face)
             result.close()
-            return position
+            return face
         else:
-            self.logger.error("position record not found: imageId=%s top=%s right=%s bottom=%s left=%s"
+            self.logger.info("face record not found: imageId=%s top=%s right=%s bottom=%s left=%s"
                               % (imageId, top, right, bottom, left))
             return None
 
-    def insert_position(self, position):
-        self.logger.info("inserting position record %s" % position)
+    def insert_face(self, face):
+        self.logger.info("inserting face record %s" % face)
         conn = self.engine.connect()
-        conn.execute(self.positions.insert(), position)
+        conn.execute(self.faces.insert(), face)
 
-    def recognize_position(self, imageId: str, top: int, right: int, bottom: int, left: int,
-                           peopleIdRecognized: str, personName: str, shortName: str):
+    def determine_peopleId(self, peopleIdRecognized, peopleIdAssign):
+        if peopleIdAssign != '':
+            return peopleIdAssign
+        elif peopleIdRecognized != '':
+            return peopleIdRecognized
+        else:
+            return ''
+
+    def recognize_face(self, imageId: str, top: int, right: int, bottom: int, left: int,
+                       peopleIdRecognized: str, personName: str, shortName: str):
 
         conn = self.engine.connect()
-        position = self.get_position(imageId, top, right, bottom, left, conn=conn)
-        if position is not None:
+        face = self.get_face(imageId, top, right, bottom, left, conn=conn)
+        if face is not None:
             conn.execute("""
-            UPDATE positions SET peopleIdRecognized=$1, peopleName=$4, shortName=$5,
-            WHERE imageId=$6 AND pos_top=$7 AND pos_right=$8 AND pos_bottom=$9 AND pos_left=$10
-                    """, peopleIdRecognized, personName, shortName, imageId, top, right, bottom, left)
-            self.logger.info("Recognized position with imageId=%s top=%s right=%s bottom=%s left=%s peopleIdRecognized=%s"
+            UPDATE faces SET peopleId=$1, peopleIdRecognized=$2, peopleName=$3, shortName=$4,
+            WHERE imageId=$5 AND pos_top=$6 AND pos_right=$7 AND pos_bottom=$8 AND pos_left=$9
+                    """, self.determine_peopleId(peopleIdRecognized, face["peopleIdAssign"]),
+                         peopleIdRecognized, personName, shortName, imageId, top, right, bottom, left)
+            self.logger.info("Recognized face with imageId=%s top=%s right=%s bottom=%s left=%s peopleIdRecognized=%s"
                              % (imageId, top, right, bottom, left, peopleIdRecognized))
         else:
-            self.insert_position({
+            self.insert_face({
                 'imageId': imageId,
                 'pos_top': top,
                 'pos_right': right,
@@ -304,25 +315,26 @@ class FaceDatabase:
                 'pos_left': left,
                 'peopleIdRecognized': peopleIdRecognized,
                 'peopleIdAssign': '',
-                'peopleId': '',
+                'peopleId': self.determine_peopleId(peopleIdRecognized, ''),
                 'peopleName': personName,
                 'shortName': shortName
             })
 
-    def assign_position(self, imageId: str, top: int, right: int, bottom: int, left: int,
-                           peopleIdAssign: str, personName: str, shortName: str):
+    def assign_face(self, imageId: str, top: int, right: int, bottom: int, left: int,
+                    peopleIdAssign: str, personName: str, shortName: str):
 
         conn = self.engine.connect()
-        position = self.get_position(imageId, top, right, bottom, left, conn=conn)
-        if position is not None:
+        face = self.get_face(imageId, top, right, bottom, left, conn=conn)
+        if face is not None:
             conn.execute("""
-            UPDATE positions SET peopleIdAssign=$1, peopleName=$4, shortName=$5,
-            WHERE imageId=$6 AND pos_top=$7 AND pos_right=$8 AND pos_bottom=$9 AND pos_left=$10
-                    """, peopleIdAssign, personName, shortName, imageId, top, right, bottom, left)
-            self.logger.info("Assigned position with imageId=%s top=%s right=%s bottom=%s left=%s peopleIdAssign=%s"
+            UPDATE faces SET peopleId=$1, peopleIdAssign=$2, peopleName=$3, shortName=$4,
+            WHERE imageId=$5 AND pos_top=$6 AND pos_right=$7 AND pos_bottom=$8 AND pos_left=$9
+                    """, self.determine_peopleId(face['peopleIdRecognized'], peopleIdAssign),
+                         peopleIdAssign, personName, shortName, imageId, top, right, bottom, left)
+            self.logger.info("Assigned face with imageId=%s top=%s right=%s bottom=%s left=%s peopleIdAssign=%s"
                              % (imageId, top, right, bottom, left, peopleIdAssign))
         else:
-            self.insert_position({
+            self.insert_face({
                 'imageId': imageId,
                 'pos_top': top,
                 'pos_right': right,
@@ -330,27 +342,27 @@ class FaceDatabase:
                 'pos_left': left,
                 'peopleIdRecognized': '',
                 'peopleIdAssign': peopleIdAssign,
-                'peopleId': '',
+                'peopleId': self.determine_peopleId('', peopleIdAssign),
                 'peopleName': personName,
                 'shortName': shortName
             })
 
-    def delete_positions(self, imageId: str):
+    def delete_faces(self, imageId: str):
         conn = self.engine.connect()
         conn.execute("""
-                    DELETE FROM positions 
+                    DELETE FROM faces 
                     WHERE imageId=$1
                     """, imageId)
 
-    def delete_position(self, imageId: str, top: int, right: int, bottom: int, left: int):
+    def delete_face(self, imageId: str, top: int, right: int, bottom: int, left: int):
         conn = self.engine.connect()
         conn.execute("""
-                    DELETE FROM positions 
+                    DELETE FROM faces 
                     WHERE imageId=$1 AND pos_top=$7 AND pos_right=$8 AND pos_bottom=$9 AND pos_left=$10
                     """, imageId, top, right, bottom, left)
 
-    def update_positions(self, imageId: str, positions):
-        self.delete_positions(imageId)
-        for position in positions:
-            self.insert_position(position)
+    def update_faces(self, imageId: str, faces):
+        self.delete_faces(imageId)
+        for face in faces:
+            self.insert_face(face)
 

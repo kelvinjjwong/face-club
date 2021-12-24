@@ -117,7 +117,7 @@ SELECT * from "People"
                                      host=self.host)
         values = await conn.fetch(
             """
-SELECT * from "People" where "peopleId" = $1
+SELECT * from "People" where "id" = $1
             """, peopleId
         )
         self.logger.info("got %i person db record" % len(values))

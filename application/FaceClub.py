@@ -186,18 +186,18 @@ class FaceClub:
                     "pic_size": ""
                 })
                 started = datetime.now()
-                people, positions, width, height, resized_file_path, tagged_file_path = self.faceRecognizer.recognize_image(model_data, file_path, output=True)
+                people, faces, width, height, resized_file_path, tagged_file_path = self.faceRecognizer.recognize_image(model_data, file_path, output=True)
                 finished = datetime.now()
                 delta = (finished - started)
-                self.faceDatabase.update_image(record["imageId"], file_path, resized_file_path, tagged_file_path, ",".join(people))
-                for position in positions:
+                self.faceDatabase.recognize_face_in_image(record["imageId"], file_path, resized_file_path, tagged_file_path, ",".join(people))
+                for face in faces:
                     # TODO search name and nick name by peopleId
                     personName = ''
                     shortName = ''
-                    self.faceDatabase.recognize_position(record["imageId"],
-                                                         position['top'], position['right'],
-                                                         position['bottom'], position['left'],
-                                                         position['peopleId'], personName, shortName)
+                    self.faceDatabase.recognize_face(record["imageId"],
+                                                     face['top'], face['right'],
+                                                     face['bottom'], face['left'],
+                                                     face['peopleId'], personName, shortName)
                 yield to_json({
                     "recognition_progress": "{}/{}".format(i, len(records)),
                     "peopleId": ",".join(people),

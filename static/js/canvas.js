@@ -165,6 +165,8 @@ function closeDialog() {
 }
 
 function openDialog(item) {
+    console.log("open dialog");
+    console.log(item);
     // Get the modal
     var modal = document.getElementById("myModal");
     // Get the <span> element that closes the modal
@@ -404,7 +406,7 @@ function tag_it(){
         }
     }
 
-    fetchQueryResult("tag", {
+    fetchQueryResult("tag_face", JSON.stringify({
         'peopleId': peopleId,
         'personName': peopleName,
         'shortName': shortName,
@@ -412,13 +414,17 @@ function tag_it(){
         'top': curr_pos.pos_top,
         'bottom': curr_pos.pos_bottom,
         'right': curr_pos.pos_right,
-        'imageId': '' // FIXME imageID
-    })
+        'imageId': imageId
+    }))
     closeDialog();
 }
 
 function untag_it(){
     console.log("untag it: "+ curr_pos.pos_left + ", " + curr_pos.pos_top)
+    let peopleId = document.getElementById("person").value.trim();
+    let peopleName = document.getElementById("personName").value.trim();
+    let shortName = document.getElementById("shortName").value.trim();
+
     let canvas = document.getElementById('canvas');
 
     for(var i=0;i<datas.length;i++){
@@ -433,7 +439,7 @@ function untag_it(){
         }
     }
 
-    fetchQueryResult("untag", {
+    fetchQueryResult("untag_face", JSON.stringify({
         'peopleId': peopleId,
         'personName': peopleName,
         'shortName': shortName,
@@ -441,8 +447,8 @@ function untag_it(){
         'top': curr_pos.pos_top,
         'bottom': curr_pos.pos_bottom,
         'right': curr_pos.pos_right,
-        'imageId': '' // FIXME imageID
-    })
+        'imageId': imageId
+    }))
     closeDialog();
 }
 
@@ -463,7 +469,7 @@ function untag_all(){
     }
     datas = [];
 
-    fetchQueryResult("untag_all", '') // FIXME imageID
+    fetchQueryResult("untag_all", imageId)
 
 }
 
@@ -500,7 +506,7 @@ function restore_tags() {
     for(var i=0;i<datas.length;i++) {
         let data = datas[i];
         drawNameBox(data, true, true);
-        fetchQueryResult("tag", {
+        fetchQueryResult("tag_face", JSON.stringify({
             'peopleId': data.peopleId,
             'personName': data.peopleName,
             'shortName': data.shortName,
@@ -508,8 +514,8 @@ function restore_tags() {
             'top': data.pos_top,
             'bottom': data.pos_bottom,
             'right': data.pos_right,
-            'imageId': '' // FIXME imageID
-        })
+            'imageId': imageId
+        }))
     }
 }
 
@@ -546,16 +552,16 @@ let fetchQueryResult = (action, id) => {
         xmlHttp.open("GET", "/people", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
-    }else if (action === "tag"){
-        xmlHttp.open("POST", "/tag", true);
+    }else if (action === "tag_face"){
+        xmlHttp.open("POST", "/tag/face", true);
         xmlHttp.setRequestHeader("Content-type", "application/json");
         xmlHttp.send(id);
-    }else if (action === "untag"){
-        xmlHttp.open("POST", "/untag", true);
+    }else if (action === "untag_face"){
+        xmlHttp.open("POST", "/untag/face", true);
         xmlHttp.setRequestHeader("Content-type", "application/json");
         xmlHttp.send(id);
-    }else if (action === "tag_persons"){
-        xmlHttp.open("POST", "/tag/persons", true);
+    }else if (action === "tag_faces"){
+        xmlHttp.open("POST", "/tag/faces", true);
         xmlHttp.setRequestHeader("Content-type", "application/json");
         xmlHttp.send(id);
     }else if (action === "untag_all"){

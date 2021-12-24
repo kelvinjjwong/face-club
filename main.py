@@ -33,8 +33,11 @@ faceClub.schedule.stop('face_job')
 
 
 @app.before_request
-def start_timing():
+def request_start():
     """ begins timing of single request """
+    logger.info("{} {}".format(
+        flask.request.method, flask.request.url)
+    )
     started = datetime.now()
 
     # put variables in app context (threadlocal for each request)
@@ -53,7 +56,7 @@ def set_response_headers(response):
 
 
 @app.teardown_request
-def end_timing(error=None):
+def request_end(error=None):
     """ end timing of single request """
     finished = datetime.now()
 
@@ -421,8 +424,8 @@ def canvas():
         filename = os.path.basename(file_path)
         prefix, extension = os.path.splitext(filename)
         imageId = prefix.replace("_1280", "")
-        positions = faceClub.faceDatabase.get_positions(imageId)
-        return render_template("canvas.html", file_path=file_path, positions=positions)
+        faces = faceClub.faceDatabase.get_faces(imageId)
+        return render_template("canvas.html", imageId=imageId, file_path=file_path, faces=faces)
     else:
         return render_template("404.html")
 
@@ -441,11 +444,20 @@ def get_people():
     return to_json(records)
 
 
-@app.route("/tag", methods=['POST'])
-def tag_person():
-    content = request.json
-    logger.info(content)
-    tag_a_person(content)
+@app.route("/tag/face", methods=['POST'])
+def tag_face():
+    try:
+        content = request.json
+        logger.info("tag_face got json")
+        logger.info(content)
+        print(content["peopleId"])
+        print(content["personName"])
+        print(content["shortName"])
+        print(content["left"])
+        print(content["top"])
+        tag_a_person(content)
+    except Exception as e:
+        logger.error(e)
     return jsonify({
         'status': 'ok'
     })
@@ -456,19 +468,19 @@ def tag_a_person(content):
         person = asyncio.run(faceClub.imageDatabase.get_person(content["peopleId"]))
         if person is None:
             faceClub.imageDatabase.create_person(content["peopleId"], content["personName"], person["shortName"])
-    faceClub.faceDatabase.assign_position(content["imageId"],
-                                          content["top"], content["right"],
-                                          content["bottom"], content["left"],
-                                          content["peopleId"],
-                                          person['personName'], person['shortName'])
+    faceClub.faceDatabase.assign_face(content["imageId"],
+                                      content["top"], content["right"],
+                                      content["bottom"], content["left"],
+                                      content["peopleId"],
+                                      person['personName'], person['shortName'])
     # TODO change peopleId and peopleIdAssign of image
     logger.info("Tagged %s top=%s right=%s bottom=%s left=%s to peopleId: %s"
                 % (content["imageId"], content["top"], content["right"], content["bottom"], content["left"],
                    content["peopleId"]))
 
 
-@app.route("/tag/persons", methods=['POST'])
-def tag_person():
+@app.route("/tag/faces", methods=['POST'])
+def tag_faces():
     array = request.json
     logger.info(array)
     for content in array:
@@ -478,13 +490,13 @@ def tag_person():
     })
 
 
-@app.route("/untag", methods=['POST'])
-def untag_person():
+@app.route("/untag/face", methods=['POST'])
+def untag_face():
     content = request.json
     logger.info(content)
-    faceClub.faceDatabase.delete_position(content["imageId"],
-                                          content["top"], content["right"],
-                                          content["bottom"], content["left"])
+    faceClub.faceDatabase.delete_face(content["imageId"],
+                                      content["top"], content["right"],
+                                      content["bottom"], content["left"])
     # TODO change peopleId and peopleIdAssign of image
     logger.info("Untagged %s top=%s right=%s bottom=%s left=%s"
                 % (content["imageId"], content["top"], content["right"], content["bottom"], content["left"]))
@@ -494,8 +506,8 @@ def untag_person():
 
 
 @app.route("/untag/all/<imageId>")
-def untag_person(imageId):
-    faceClub.faceDatabase.delete_positions(imageId)
+def untag_all(imageId):
+    faceClub.faceDatabase.delete_faces(imageId)
     # TODO change peopleId and peopleIdAssign of image
     logger.info("Untagged ALL in %s" % imageId)
     return jsonify({

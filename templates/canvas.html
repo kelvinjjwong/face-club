@@ -7,19 +7,21 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/canvas.css') }}" />
     <script src="{{ url_for('static', filename='js/canvas.js') }}"></script>
     <script>
+        let imageId = '{{ imageId }}';
         let unknown_person_icon = "{{ url_for('static', filename='images/unknown.png') }}";
         let datas = [];
-    {% for position in positions %}
+    {% for face in faces %}
         {
             const item = {};
-            item.pos_top = {{ position.pos_top }};
-            item.pos_right = {{ position.pos_right }};
-            item.pos_bottom = {{ position.pos_bottom }};
-            item.pos_left = {{ position.pos_left }};
-            item.peopleIdRecognized = '{{ position.peopleIdRecognized }}';
-            item.peopleIdAssign = '{{ position.peopleIdAssign }}';
-            item.peopleId = '{{ position.peopleId }}';
-            item.peopleName = '{{ position.peopleName }}';
+            item.pos_top = {{ face.pos_top }};
+            item.pos_right = {{ face.pos_right }};
+            item.pos_bottom = {{ face.pos_bottom }};
+            item.pos_left = {{ face.pos_left }};
+            item.peopleIdRecognized = '{{ face.peopleIdRecognized }}';
+            item.peopleIdAssign = '{{ face.peopleIdAssign }}';
+            item.peopleId = '{{ face.peopleId }}';
+            item.peopleName = '{{ face.peopleName }}';
+            item.shortName = '{{ face.shortName }}';
             item.source = 'db'
             datas.push(item);
         }
