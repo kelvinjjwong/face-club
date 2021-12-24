@@ -286,9 +286,9 @@ class FaceDatabase:
         conn.execute(self.faces.insert(), face)
 
     def determine_peopleId(self, peopleIdRecognized, peopleIdAssign):
-        if peopleIdAssign != '':
+        if peopleIdAssign != '(not_assigned)':
             return peopleIdAssign
-        elif peopleIdRecognized != '':
+        elif peopleIdRecognized != '(not_recognized)':
             return peopleIdRecognized
         else:
             return ''
@@ -300,7 +300,7 @@ class FaceDatabase:
         face = self.get_face(imageId, top, right, bottom, left, conn=conn)
         if face is not None:
             conn.execute("""
-            UPDATE faces SET peopleId=$1, peopleIdRecognized=$2, peopleName=$3, shortName=$4,
+            UPDATE faces SET peopleId=$1, peopleIdRecognized=$2, peopleName=$3, shortName=$4
             WHERE imageId=$5 AND pos_top=$6 AND pos_right=$7 AND pos_bottom=$8 AND pos_left=$9
                     """, self.determine_peopleId(peopleIdRecognized, face["peopleIdAssign"]),
                          peopleIdRecognized, personName, shortName, imageId, top, right, bottom, left)
@@ -314,8 +314,8 @@ class FaceDatabase:
                 'pos_bottom': bottom,
                 'pos_left': left,
                 'peopleIdRecognized': peopleIdRecognized,
-                'peopleIdAssign': '',
-                'peopleId': self.determine_peopleId(peopleIdRecognized, ''),
+                'peopleIdAssign': '(not_assigned)',
+                'peopleId': self.determine_peopleId(peopleIdRecognized, '(not_assigned)'),
                 'peopleName': personName,
                 'shortName': shortName
             })
@@ -327,7 +327,7 @@ class FaceDatabase:
         face = self.get_face(imageId, top, right, bottom, left, conn=conn)
         if face is not None:
             conn.execute("""
-            UPDATE faces SET peopleId=$1, peopleIdAssign=$2, peopleName=$3, shortName=$4,
+            UPDATE faces SET peopleId=$1, peopleIdAssign=$2, peopleName=$3, shortName=$4
             WHERE imageId=$5 AND pos_top=$6 AND pos_right=$7 AND pos_bottom=$8 AND pos_left=$9
                     """, self.determine_peopleId(face['peopleIdRecognized'], peopleIdAssign),
                          peopleIdAssign, personName, shortName, imageId, top, right, bottom, left)

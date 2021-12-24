@@ -183,16 +183,16 @@ function openDialog(item) {
     let image = document.getElementById("img");
     let item_width = item.pos_right - item.pos_left;
     let item_height = item.pos_bottom - item.pos_top;
-    let origin_scale = 80;
-    let scale = origin_scale;
-    if (Math.max(item_width, item_height) > origin_scale) {
-        scale = origin_scale / Math.max(item_width, item_height) * origin_scale;
-    }
+    let display_width = 80;
+    let display_height = 80;
+    //if (Math.max(item_width, item_height) > origin_scale) {
+    //    scale = origin_scale / Math.max(item_width, item_height) * origin_scale;
+    //}
     ctx.drawImage(image,
         item.pos_left, item.pos_top,   // Start at 70/20 pixels from the left and the top of the image (crop),
         item_width, item_height,   // "Get" a `50 * 50` (w * h) area from the source image (crop),
         0, 0,     // Place the result at 0, 0 in the canvas,
-        scale, scale); // With as width / height: 100 * 100 (scale)
+        display_width, display_height); // With as width / height: 100 * 100 (scale)
 
     if(item.peopleId !== ""){
         show_person_in_dialog(item.peopleId);

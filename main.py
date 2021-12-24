@@ -456,6 +456,7 @@ def tag_face():
         print(content["left"])
         print(content["top"])
         tag_a_person(content)
+        update_peopleId_of_image(content["imageId"])
     except Exception as e:
         logger.error(e)
     return jsonify({
@@ -473,11 +474,16 @@ def tag_a_person(content):
                                       content["bottom"], content["left"],
                                       content["peopleId"],
                                       person['personName'], person['shortName'])
-    # TODO change peopleId and peopleIdAssign of image
     logger.info("Tagged %s top=%s right=%s bottom=%s left=%s to peopleId: %s"
                 % (content["imageId"], content["top"], content["right"], content["bottom"], content["left"],
                    content["peopleId"]))
 
+def update_peopleId_of_image(imageId):
+    faces = faceClub.faceDatabase.get_faces(imageId)
+    peopleIds = []
+    for face in faces:
+        peopleIds.append(face['peopleId'])
+    faceClub.faceDatabase.assign_face_to_image(imageId, ",".join(peopleIds))
 
 @app.route("/tag/faces", methods=['POST'])
 def tag_faces():
@@ -485,6 +491,7 @@ def tag_faces():
     logger.info(array)
     for content in array:
         tag_a_person(content)
+    update_peopleId_of_image(content["imageId"])
     return jsonify({
         'status': 'ok'
     })
@@ -497,7 +504,7 @@ def untag_face():
     faceClub.faceDatabase.delete_face(content["imageId"],
                                       content["top"], content["right"],
                                       content["bottom"], content["left"])
-    # TODO change peopleId and peopleIdAssign of image
+    update_peopleId_of_image(content["imageId"])
     logger.info("Untagged %s top=%s right=%s bottom=%s left=%s"
                 % (content["imageId"], content["top"], content["right"], content["bottom"], content["left"]))
     return jsonify({
@@ -508,7 +515,7 @@ def untag_face():
 @app.route("/untag/all/<imageId>")
 def untag_all(imageId):
     faceClub.faceDatabase.delete_faces(imageId)
-    # TODO change peopleId and peopleIdAssign of image
+    update_peopleId_of_image(imageId)
     logger.info("Untagged ALL in %s" % imageId)
     return jsonify({
         'status': 'ok'

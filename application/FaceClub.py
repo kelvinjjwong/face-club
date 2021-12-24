@@ -137,8 +137,15 @@ class FaceClub:
         self.workspace.backupDataset()
         pass
 
+    def get_personName_from_people(self, peopleId: str, people):
+        for p in people:
+            if p["id"] == peopleId:
+                return p["name"], p["shortName"]
+        return '', ''
+
     def recognize_images(self, limit=10):
         self.faceRecognizer.isRecognizing = True
+        people_names = asyncio.run(self.imageDatabase.get_people())
         model_file = self.workspace.get_model_file_path()
         yield to_json({
             "recognition_progress": "",
@@ -162,9 +169,6 @@ class FaceClub:
             "pic_size": ""
         })
         i = 0
-        #folder = self.config.workspace_conf["images"]
-        #files = os.listdir(folder)
-        #for filename in files:
         model_data = self.faceRecognizer.get_model_data(model_file)
         for record in records:
             file_path = self.workspace.get_image_file_path(record["imageId"], record["fileExt"])
@@ -186,21 +190,19 @@ class FaceClub:
                     "pic_size": ""
                 })
                 started = datetime.now()
-                people, faces, width, height, resized_file_path, tagged_file_path = self.faceRecognizer.recognize_image(model_data, file_path, output=True)
+                peopleIds, faces, width, height, resized_file_path, tagged_file_path = self.faceRecognizer.recognize_image(model_data, file_path, output=True)
                 finished = datetime.now()
                 delta = (finished - started)
-                self.faceDatabase.recognize_face_in_image(record["imageId"], file_path, resized_file_path, tagged_file_path, ",".join(people))
+                self.faceDatabase.recognize_face_in_image(record["imageId"], file_path, resized_file_path, tagged_file_path, ",".join(peopleIds))
                 for face in faces:
-                    # TODO search name and nick name by peopleId
-                    personName = ''
-                    shortName = ''
+                    personName, shortName = self.get_personName_from_people(face['peopleId'], people_names)
                     self.faceDatabase.recognize_face(record["imageId"],
                                                      face['top'], face['right'],
                                                      face['bottom'], face['left'],
                                                      face['peopleId'], personName, shortName)
                 yield to_json({
                     "recognition_progress": "{}/{}".format(i, len(records)),
-                    "peopleId": ",".join(people),
+                    "peopleId": ",".join(peopleIds),
                     "state": "PROCESSED",
                     "face_file": tagged_file_path,
                     "source_file": file_path,
