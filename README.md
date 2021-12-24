@@ -1,8 +1,9 @@
 A web application help recognize and maintenance faces from images imported by ImageDocker
 
-Target environment: macOS
+![Platform](https://img.shields.io/badge/platforms-macOS%2010.13+-ff7711.svg) 
+![python](https://img.shields.io/badge/Python-3.7-blue)
 
-## Objective of this project:
+## Objective:
 1. scan picture files from a mounted volume
 2. detect and recognize faces from the pictures
 3. store the names of recognized faces into database
