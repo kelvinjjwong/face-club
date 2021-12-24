@@ -37,6 +37,8 @@
     	value='Start Training' />
     <input type='button' onclick='streamQueryResult("start_recognition", ["recognition_progress", "peopleId", "state", "face_file", "source_file", "file_size_kb", "time_cost_sec", "pic_size"], "recognition_progress")'
     	value='Start Recognition' />
+    <input type='button' onclick='streamQueryResult("sync_back_faces", ["sync_progress"], "sync_progress")'
+    	value='Sync Back Faces' />
 
     <p id='msg'></p>
 

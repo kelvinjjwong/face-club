@@ -200,6 +200,7 @@ class FaceClub:
                                                      face['pos_top'], face['pos_right'],
                                                      face['pos_bottom'], face['pos_left'],
                                                      face['peopleId'], personName, shortName)
+                    # TODO sync back to image db (optional, to improve recognition speed)
                 yield to_json({
                     "recognition_progress": "{}/{}".format(i, len(records)),
                     "peopleId": ",".join(peopleIds),

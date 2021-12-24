@@ -23,6 +23,9 @@ def face_job():
         if faceClub.isShuttingDown:
             logger.info("break job task due to shutting down")
             break
+        # TODO copy images from volume
+        # TODO recognize faces
+        # TODO sync faces,resized_images,tagged_images back to image db
         time.sleep(1)
         seconds -= 1
     logger.info('job task completed')
@@ -401,7 +404,7 @@ def start_training():
 def start_recognition():
     if faceClub.is_ready_for_start_recognition():
         return app.response_class(
-            faceClub.recognize_images(limit=20),
+            faceClub.recognize_images(limit=faceClub.config.internal_database_display_amount),
             "text/html")
     else:
         return to_json({
@@ -488,6 +491,7 @@ def update_peopleId_of_image(imageId):
     image = faceClub.faceDatabase.get_image(imageId)
     taggedFilePath = faceClub.faceRecognizer.tag_faces_on_image(image['resizedFilePath'], faces)
     faceClub.faceDatabase.update_image_taggedFilePath(imageId, taggedFilePath)
+    # TODO sync faces,resized_images,tagged_images back to image db
     pass
 
 @app.route("/tag/faces", methods=['POST'])
@@ -525,6 +529,13 @@ def untag_all(imageId):
     return jsonify({
         'status': 'ok'
     })
+
+
+@app.route("/sync/faces")
+def sync_back_to_image_db():
+    # TODO sync faces,resized_images,tagged_images back to image db
+    # yield
+    pass
 
 
 # Press the green button in the gutter to run the script.

@@ -38,6 +38,10 @@ let streamQueryResult = (action, columns, progress_column, id) => {
         xmlHttp.open("GET", "/recognition/start", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
+    }else if(action === "sync_back_faces"){
+        xmlHttp.open("GET", "/sync/faces", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
     }
 }
 
