@@ -223,7 +223,7 @@ class FaceDatabase:
         faces = []
         if conn is None:
             conn = self.engine.connect()
-        s = select(self.faces).where(self.faces.c.imageId == imageId)
+        s = select(self.faces).where(self.faces.c.imageId == imageId).order_by(self.faces.c.pos_left)
         print(s.compile(compile_kwargs={"literal_binds": True}))
         result = conn.execute(s)
         for imageId, pos_top, pos_right, pos_bottom, pos_left, peopleIdRecognized, peopleIdAssign, peopleId, peopleName, shortName in result:

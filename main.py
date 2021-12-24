@@ -484,6 +484,8 @@ def update_peopleId_of_image(imageId):
     for face in faces:
         peopleIds.append(face['peopleId'])
     faceClub.faceDatabase.assign_face_to_image(imageId, ",".join(peopleIds))
+    # TODO re-generate _face image
+    pass
 
 @app.route("/tag/faces", methods=['POST'])
 def tag_faces():
