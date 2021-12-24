@@ -197,8 +197,8 @@ class FaceClub:
                 for face in faces:
                     personName, shortName = self.get_personName_from_people(face['peopleId'], people_names)
                     self.faceDatabase.recognize_face(record["imageId"],
-                                                     face['top'], face['right'],
-                                                     face['bottom'], face['left'],
+                                                     face['pos_top'], face['pos_right'],
+                                                     face['pos_bottom'], face['pos_left'],
                                                      face['peopleId'], personName, shortName)
                 yield to_json({
                     "recognition_progress": "{}/{}".format(i, len(records)),

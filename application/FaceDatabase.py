@@ -183,6 +183,17 @@ class FaceDatabase:
         else:
             self.logger.error("image record not found: %s" % imageId)
 
+    def update_image_taggedFilePath(self, imageId, taggedFilePath):
+        conn = self.engine.connect()
+        u = self.images.update() \
+            .where(self.images.c.imageId == imageId) \
+            .values(
+            taggedFilePath=taggedFilePath
+        )
+        print(u.compile(compile_kwargs={"literal_binds": True}))
+        conn.execute(u)
+        self.logger.info("updated image with imageId=%s taggedFilePath=%s" % (imageId, taggedFilePath))
+
     def recognize_face_in_image(self, imageId, localFilePath, resizedFilePath, taggedFilePath, peopleIdRecognized):
         conn = self.engine.connect()
         image = self.get_image(imageId, conn=conn)
@@ -215,7 +226,7 @@ class FaceDatabase:
             )
             print(u.compile(compile_kwargs={"literal_binds": True}))
             conn.execute(u)
-            self.logger.info("updated image with imageId=%s scanWrong=%s" % (imageId, image['scanWrong']))
+            self.logger.info("updated image with imageId=%s peopleIdAssign=%s" % (imageId, peopleIdAssign))
         else:
             self.logger.error("image record not found: %s" % imageId)
 
@@ -237,6 +248,7 @@ class FaceDatabase:
                 'peopleIdAssign': peopleIdAssign,
                 'peopleId': peopleId,
                 'peopleName': peopleName,
+                'personName': peopleName,
                 'shortName': shortName
             }
             faces.append(face)
@@ -365,4 +377,3 @@ class FaceDatabase:
         self.delete_faces(imageId)
         for face in faces:
             self.insert_face(face)
-

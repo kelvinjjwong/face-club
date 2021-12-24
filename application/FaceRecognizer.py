@@ -154,7 +154,7 @@ class FaceRecognizer:
 
             font = ImageFont.truetype('/System/Library/Fonts/PingFang.ttc', 14)
             font_color = (255, 255, 255)
-            label_bgcolor = (80, 80, 80)
+            label_bgcolor = (60, 60, 60)
             label_border_color = (150, 150, 150)
 
             name_label_offset = 1
@@ -162,10 +162,10 @@ class FaceRecognizer:
 
             # loop over the recognized faces
             for face in faces:
-                left = face['left']
-                top = face['top']
-                right = face['right']
-                bottom = face['bottom']
+                left = int(face['pos_left'])
+                top = int(face['pos_top'])
+                right = int(face['pos_right'])
+                bottom = int(face['pos_bottom'])
                 name = face['personName']
                 if name == '':
                     name = face['peopleId']
@@ -193,10 +193,10 @@ class FaceRecognizer:
                 label_text_y = label_top  # + round(text_height / 2) #bottom + 30
 
                 # 4 points of name label
-                label_left_top = (label_left, label_top)
-                label_right_top = (label_right, label_top)
-                label_left_bottom = (label_left, label_bottom)
-                label_right_bottom = (label_right, label_bottom)
+                label_left_top = (label_left, label_top) if label_left <= left else (left, label_top)
+                label_right_top = (label_right, label_top) if label_left <= left else (right, label_top)
+                label_left_bottom = (label_left, label_bottom) if label_left <= left else (left, label_bottom)
+                label_right_bottom = (label_right, label_bottom) if label_left <= left else (right, label_bottom)
 
                 # name label rectangle - fill color
                 cv2.rectangle(image, label_left_top, label_right_bottom, label_bgcolor, cv2.FILLED)
@@ -233,10 +233,10 @@ class FaceRecognizer:
 
             # draw name label - text
             for face in faces:
-                left = face['left']
-                top = face['top']
-                right = face['right']
-                bottom = face['bottom']
+                left = int(face['pos_left'])
+                top = int(face['pos_top'])
+                right = int(face['pos_right'])
+                bottom = int(face['pos_bottom'])
                 name = face['personName']
                 if name == '':
                     name = face['peopleId']
@@ -263,6 +263,7 @@ class FaceRecognizer:
         else:
             if os.path.exists(out_file_path):
                 os.remove(out_file_path)
+            self.logger.info("Deleted tagged image for {}".format(resized_image_file))
             return ''
 
     def recognize_image(self, model_data, image_file, people_names, detection_method="cnn"):
@@ -318,10 +319,10 @@ class FaceRecognizer:
         for ((top, right, bottom, left), name) in zip(boxes, names):
             personName, shortName = self.get_personName_from_people(name, people_names)
             faces.append({
-                'top': top,
-                'right': right,
-                'bottom': bottom,
-                'left': left,
+                'pos_top': top,
+                'pos_right': right,
+                'pos_bottom': bottom,
+                'pos_left': left,
                 'peopleId': name,
                 'personName': personName,
                 'shortName': shortName

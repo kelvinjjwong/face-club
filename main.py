@@ -484,7 +484,10 @@ def update_peopleId_of_image(imageId):
     for face in faces:
         peopleIds.append(face['peopleId'])
     faceClub.faceDatabase.assign_face_to_image(imageId, ",".join(peopleIds))
-    # TODO re-generate _face image
+    # re-generate _face image or delete it
+    image = faceClub.faceDatabase.get_image(imageId)
+    taggedFilePath = faceClub.faceRecognizer.tag_faces_on_image(image['resizedFilePath'], faces)
+    faceClub.faceDatabase.update_image_taggedFilePath(imageId, taggedFilePath)
     pass
 
 @app.route("/tag/faces", methods=['POST'])
