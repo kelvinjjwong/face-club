@@ -116,8 +116,9 @@ class FaceRecognizer:
     def generate_image_file_path(self, file_path, suffix):
         filename = os.path.basename(file_path)
         folder = os.path.dirname(file_path)
-        prefix, extension = os.path.splitext(filename)
-        out_filename = "%s_%s%s" % (prefix, suffix, extension)
+        origin_filename, extension = os.path.splitext(filename)
+        part = str(origin_filename).partition("_")
+        out_filename = "%s_%s%s" % (part[0], suffix, extension)
         out_file_path = os.path.join(folder, out_filename)
         return out_file_path, out_filename, extension
 
@@ -137,7 +138,134 @@ class FaceRecognizer:
         else:
             return out_file_path
 
-    def recognize_image(self, model_data, image_file, output=False, detection_method="cnn"):
+    def get_personName_from_people(self, peopleId: str, people):
+        for p in people:
+            if p["id"] == peopleId:
+                return p["name"], p["shortName"]
+        return '', ''
+
+    def tag_faces_on_image(self, resized_image_file, faces, image_data=None):
+        out_file_path, out_filename, extension = self.generate_image_file_path(resized_image_file, "faces")
+
+        if len(faces) > 0:
+            image = image_data
+            if image is None:
+                image = cv2.imread(resized_image_file)
+
+            font = ImageFont.truetype('/System/Library/Fonts/PingFang.ttc', 14)
+            font_color = (255, 255, 255)
+            label_bgcolor = (80, 80, 80)
+            label_border_color = (150, 150, 150)
+
+            name_label_offset = 1
+            name_label_width_offset = 2
+
+            # loop over the recognized faces
+            for face in faces:
+                left = face['left']
+                top = face['top']
+                right = face['right']
+                bottom = face['bottom']
+                name = face['personName']
+                if name == '':
+                    name = face['peopleId']
+
+                # draw the predicted face name on the image
+
+                # Draw a box around the face
+                cv2.rectangle(image, (left, top), (right, bottom), (100, 100, 100), 1)
+
+                text_size = font.getsize(name)
+                text_width = text_size[0]
+                text_height = text_size[1]
+
+                # Draw a label with a name below the face
+
+                # label_triangle_top = bottom + 5
+                label_midpoint = left + round((right - left) / 2)
+
+                # borders of name label
+                label_left = label_midpoint - round(text_width / 2) - name_label_width_offset  # left
+                label_top = bottom + name_label_offset
+                label_right = label_midpoint + round(text_width / 2) + name_label_width_offset  # right + 10
+                label_bottom = label_top + round(text_height) + 5  # bottom + 35
+                label_text_x = label_left + 2  # left + 2
+                label_text_y = label_top  # + round(text_height / 2) #bottom + 30
+
+                # 4 points of name label
+                label_left_top = (label_left, label_top)
+                label_right_top = (label_right, label_top)
+                label_left_bottom = (label_left, label_bottom)
+                label_right_bottom = (label_right, label_bottom)
+
+                # name label rectangle - fill color
+                cv2.rectangle(image, label_left_top, label_right_bottom, label_bgcolor, cv2.FILLED)
+
+                # 3 points of triangle
+                # pt1 = (label_midpoint, label_triangle_top)
+                # pt2 = (label_midpoint - 7, label_top)
+                # pt3 = (label_midpoint + 7, label_top)
+
+                # triangle - fill color
+                # triangle_cnt = numpy.array([pt1, pt2, pt3]).astype(numpy.int32)
+                # cv2.drawContours(image, [triangle_cnt], 0, label_bgcolor, cv2.FILLED)
+
+                # triangle - border
+                # cv2.line(image, pt1, pt2, label_border_color, 1)
+                # cv2.line(image, pt1, pt3, label_border_color, 1)
+                # cv2.line(image, label_left_top, pt2, label_border_color, 1)
+                # cv2.line(image, pt3, label_right_top, label_border_color, 1)
+
+                # name label rectangle - border
+                # cv2.line(image, label_left_top, label_right_top, label_border_color, 1)
+                # cv2.line(image, label_left_top, label_left_bottom, label_border_color, 1)
+                # cv2.line(image, label_right_top, label_right_bottom, label_border_color, 1)
+                # cv2.line(image, label_left_bottom, label_right_bottom, label_border_color, 1)
+
+                # Draw the name
+                # cv2.putText(image, name , (label_text_x, label_text_y), font, 0.5, label_text_color, 1)
+                # font.draw_text(image, (3, 3), '你好', 24, label_text_color)
+                # self.logger.info("RECOGNITION RESULT: {} {} {} {} {}".format(left, top, right, bottom, name))
+
+            # draw rectangle to image
+            img_PIL = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+            draw = ImageDraw.Draw(img_PIL)
+
+            # draw name label - text
+            for face in faces:
+                left = face['left']
+                top = face['top']
+                right = face['right']
+                bottom = face['bottom']
+                name = face['personName']
+                if name == '':
+                    name = face['peopleId']
+
+                if name != "Unknown":
+                    text_size = font.getsize(name)
+                    text_width = text_size[0]
+                    text_height = text_size[1]
+
+                    label_midpoint = left + round((right - left) / 2)
+                    label_left = label_midpoint - round(text_width / 2) - name_label_width_offset  # left
+                    label_top = bottom + name_label_offset
+                    label_right = label_midpoint + round(text_width / 2) + name_label_width_offset  # right + 10
+                    label_bottom = label_top + round(text_height) + 5  # bottom + 35
+                    label_text_x = label_left + 2  # left + 2
+                    label_text_y = label_top + 2  # + round(text_height / 2) #bottom + 30
+
+                    draw.text((label_text_x, label_text_y), name, font=font, fill=font_color)
+
+            image = cv2.cvtColor(numpy.asarray(img_PIL), cv2.COLOR_RGB2BGR)
+            cv2.imwrite(out_file_path, image)
+            self.logger.info("Saved tagged image to {}".format(out_file_path))
+            return out_file_path
+        else:
+            if os.path.exists(out_file_path):
+                os.remove(out_file_path)
+            return ''
+
+    def recognize_image(self, model_data, image_file, people_names, detection_method="cnn"):
         # load the input image and convert it from BGR to RGB
         thumbnail_image_file = self.resize_image(image_file, 200)
         resized_image_file = self.resize_image(image_file, 1280)
@@ -188,97 +316,21 @@ class FaceRecognizer:
 
         faces = []
         for ((top, right, bottom, left), name) in zip(boxes, names):
+            personName, shortName = self.get_personName_from_people(name, people_names)
             faces.append({
                 'top': top,
                 'right': right,
                 'bottom': bottom,
                 'left': left,
-                'peopleId': name
+                'peopleId': name,
+                'personName': personName,
+                'shortName': shortName
             })
             self.logger.info("top=%s right=%s bottom=%s left=%s name=%s" % (top, right, bottom, left, name))
 
         self.logger.info("Recognition result: %s - %s" % (image_file, names))
 
-        out_file_path = ""
         # save image
-        if output is True and len(names) > 0:
-            out_file_path, out_filename, extension = self.generate_image_file_path(image_file, "faces")
-            font_size = 14
-            font = ImageFont.truetype('/System/Library/Fonts/PingFang.ttc', font_size)
-            font_color = (255, 255, 255)
-
-            # loop over the recognized faces
-            for ((top, right, bottom, left), name) in zip(boxes, names):
-                # draw the predicted face name on the image
-
-                # Draw a box around the face
-                cv2.rectangle(image, (left, top), (right, bottom), (100, 100, 100), 1)
-
-                display_name = "{}".format(name)
-                text_size = font.getsize(display_name)
-                text_width = text_size[0]
-                text_height = text_size[1]
-
-                # Draw a label with a name below the face
-                label_bgcolor = (80, 80, 80)
-                label_border_color = (150, 150, 150)
-                label_triangle_top = bottom + 5
-                label_midpoint = left + round((right - left) / 2)
-                label_left = label_midpoint - round(text_width / 2) - 5  # left
-                label_top = bottom + 15
-                label_right = label_midpoint + round(text_width / 2) + 5  # right + 10
-                label_bottom = label_top + round(text_height) + 5  # bottom + 35
-                label_text_x = label_left + 2  # left + 2
-                label_text_y = label_top  # + round(text_height / 2) #bottom + 30
-                label_left_top = (label_left, label_top)
-                label_right_top = (label_right, label_top)
-                label_left_bottom = (label_left, label_bottom)
-                label_right_bottom = (label_right, label_bottom)
-
-                # background of the label
-                cv2.rectangle(image, label_left_top, label_right_bottom, label_bgcolor, cv2.FILLED)
-
-                pt1 = (label_midpoint, label_triangle_top)
-                pt2 = (label_midpoint - 7, label_top)
-                pt3 = (label_midpoint + 7, label_top)
-                triangle_cnt = numpy.array([pt1, pt2, pt3]).astype(numpy.int32)
-                cv2.drawContours(image, [triangle_cnt], 0, label_bgcolor, cv2.FILLED)
-
-                # border
-                cv2.line(image, pt1, pt2, label_border_color, 1)
-                cv2.line(image, pt1, pt3, label_border_color, 1)
-                cv2.line(image, label_left_top, pt2, label_border_color, 1)
-                cv2.line(image, pt3, label_right_top, label_border_color, 1)
-                cv2.line(image, label_left_top, label_left_bottom, label_border_color, 1)
-                cv2.line(image, label_right_top, label_right_bottom, label_border_color, 1)
-                cv2.line(image, label_left_bottom, label_right_bottom, label_border_color, 1)
-
-                # Draw the name
-                # cv2.putText(image, name , (label_text_x, label_text_y), font, 0.5, label_text_color, 1)
-                # font.draw_text(image, (3, 3), '你好', 24, label_text_color)
-                # self.logger.info("RECOGNITION RESULT: {} {} {} {} {}".format(left, top, right, bottom, name))
-
-            img_PIL = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-            draw = ImageDraw.Draw(img_PIL)
-
-            for ((top, right, bottom, left), name) in zip(boxes, names):
-                display_name = "{}".format(name)
-                text_size = font.getsize(display_name)
-                text_width = text_size[0]
-                text_height = text_size[1]
-
-                label_midpoint = left + round((right - left) / 2)
-                label_left = label_midpoint - round(text_width / 2) - 5  # left
-                label_top = bottom + 15
-                label_right = label_midpoint + round(text_width / 2) + 5  # right + 10
-                label_bottom = label_top + round(text_height) + 5  # bottom + 35
-                label_text_x = label_left + 5  # left + 2
-                label_text_y = label_top + 2  # + round(text_height / 2) #bottom + 30
-
-                draw.text((label_text_x, label_text_y), display_name, font=font, fill=font_color)
-
-            image = cv2.cvtColor(numpy.asarray(img_PIL), cv2.COLOR_RGB2BGR)
-            cv2.imwrite(out_file_path, image)
-            self.logger.info("Saved tagged image to {}".format(out_file_path))
+        out_file_path = self.tag_faces_on_image(resized_image_file, faces, image)
 
         return names, faces, width, height, resized_image_file, out_file_path

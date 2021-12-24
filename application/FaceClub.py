@@ -190,7 +190,7 @@ class FaceClub:
                     "pic_size": ""
                 })
                 started = datetime.now()
-                peopleIds, faces, width, height, resized_file_path, tagged_file_path = self.faceRecognizer.recognize_image(model_data, file_path, output=True)
+                peopleIds, faces, width, height, resized_file_path, tagged_file_path = self.faceRecognizer.recognize_image(model_data, file_path, people_names)
                 finished = datetime.now()
                 delta = (finished - started)
                 self.faceDatabase.recognize_face_in_image(record["imageId"], file_path, resized_file_path, tagged_file_path, ",".join(peopleIds))

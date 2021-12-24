@@ -401,7 +401,7 @@ def start_training():
 def start_recognition():
     if faceClub.is_ready_for_start_recognition():
         return app.response_class(
-            faceClub.recognize_images(limit=faceClub.config.internal_database_display_amount),
+            faceClub.recognize_images(limit=20),
             "text/html")
     else:
         return to_json({
