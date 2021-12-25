@@ -58,7 +58,7 @@ class Workspace:
                 "imageYear": image["photoTakenYear"],
                 "sample": False,
                 "scanned": False,
-                "scanWrong": False
+                "reviewed": False
             }
             rtn.append(rec)
         self.isCopyingImagesToWorkspace = False
@@ -89,7 +89,7 @@ class Workspace:
                 "imageYear": image["imageYear"],
                 "sample": False,
                 "scanned": False,
-                "scanWrong": False
+                "reviewed": False
             }
             rtn.append(rec)
         self.isCopyingImagesToWorkspace = False

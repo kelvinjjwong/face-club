@@ -217,11 +217,11 @@ def list_images_in_workspace():
                 }
             ]
         }
-        record["scanWrong"] = {
-            'text': record["scanWrong"],
+        record["reviewed"] = {
+            'text': record["reviewed"],
             'actions': [
                 {
-                    'func': 'toggle_scan_result',
+                    'func': 'toggle_reviewed',
                     'id': record["imageId"]
                 }
             ]
@@ -229,9 +229,9 @@ def list_images_in_workspace():
     return to_json(records)
 
 
-@app.route("/images/scanned/faces")
-def list_scanned_faces_in_workspace():
-    records = faceClub.faceDatabase.get_scanned_faces(limit=faceClub.config.internal_database_display_amount)
+@app.route("/tagged/images/list")
+def list_tagged_images_in_workspace():
+    records = faceClub.faceDatabase.get_tagged_images(limit=faceClub.config.internal_database_display_amount)
     for record in records:
         resizedFilePath = record["resizedFilePath"]
         taggedFilePath = record["taggedFilePath"]
@@ -278,16 +278,16 @@ def list_scanned_faces_in_workspace():
             'text': record["sample"],
             'actions': [
                 {
-                    'func': 'scanned_toggle_sample',
+                    'func': 'toggle_sample_tagged',
                     'id': record["imageId"]
                 }
             ]
         }
-        record["scanWrong"] = {
-            'text': record["scanWrong"],
+        record["reviewed"] = {
+            'text': record["reviewed"],
             'actions': [
                 {
-                    'func': 'scanned_toggle_scan_result',
+                    'func': 'toggle_reviewed_tagged',
                     'id': record["imageId"]
                 }
             ]
@@ -393,28 +393,28 @@ def backup_model():
     return list_model_backups()
 
 
-@app.route("/face/toggle/sample/<imageId>")
-def toggle_face_sample(imageId):
+@app.route("/image/toggle/sample/<imageId>")
+def image_toggle_sample(imageId):
     faceClub.faceDatabase.toggle_sample(imageId)
     return list_images_in_workspace()
 
 
-@app.route("/face/toggle/scan/result/<imageId>")
-def toggle_face_scan_result(imageId):
-    faceClub.faceDatabase.toggle_scan_result(imageId)
+@app.route("/image/toggle/reviewed/<imageId>")
+def image_toggle_reviewed(imageId):
+    faceClub.faceDatabase.toggle_reviewed(imageId)
     return list_images_in_workspace()
 
 
-@app.route("/face/scanned/toggle/sample/<imageId>")
-def toggle_scanned_face_sample(imageId):
+@app.route("/tagged/image/toggle/sample/<imageId>")
+def tagged_image_toggle_sample(imageId):
     faceClub.faceDatabase.toggle_sample(imageId)
-    return list_scanned_faces_in_workspace()
+    return list_tagged_images_in_workspace()
 
 
-@app.route("/face/scanned/toggle/scan/result/<imageId>")
-def toggle_scanned_face_scan_result(imageId):
-    faceClub.faceDatabase.toggle_scan_result(imageId)
-    return list_scanned_faces_in_workspace()
+@app.route("/tagged/image/toggle/reviewed/<imageId>")
+def tagged_image_toggle_reviewed(imageId):
+    faceClub.faceDatabase.toggle_reviewed(imageId)
+    return list_tagged_images_in_workspace()
 
 
 @app.route("/training/start")

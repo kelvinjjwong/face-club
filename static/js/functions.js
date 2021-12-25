@@ -10,20 +10,20 @@ function resume_job(id){
     fetchQueryResult("resume_job")
 }
 
-function toggle_scan_result(id) {
-    fetchQueryResult("toggle_face_scan_result", id)
+function toggle_reviewed(id) {
+    fetchQueryResult("toggle_reviewed", id)
 }
 
 function toggle_sample(id){
-    fetchQueryResult("toggle_face_sample", id)
+    fetchQueryResult("toggle_sample", id)
 }
 
-function scanned_toggle_scan_result(id) {
-    fetchQueryResult("toggle_scanned_face_scan_result", id)
+function toggle_reviewed_tagged(id) {
+    fetchQueryResult("toggle_reviewed_tagged", id)
 }
 
-function scanned_toggle_sample(id){
-    fetchQueryResult("toggle_scanned_face_sample", id)
+function toggle_sample_tagged(id){
+    fetchQueryResult("toggle_sample_tagged", id)
 }
 
 function use_dataset(backup_folder){

@@ -28,7 +28,7 @@ class FaceDatabase:
                             Column("imageYear", Integer),
                             Column("sample", Boolean),
                             Column("scanned", Boolean),
-                            Column("scanWrong", Boolean)  # TODO replace 'scanWrong' with 'reviewed'
+                            Column("reviewed", Boolean)
                             )
         self.faces = Table('faces', self.metadata,
                            Column("imageId", String(50)),
@@ -89,7 +89,7 @@ class FaceDatabase:
                 'imageYear': row["imageYear"],
                 'sample': row["sample"],
                 'scanned': row["scanned"],
-                'scanWrong': row["scanWrong"]
+                'reviewed': row["reviewed"]
             }
             self.logger.info(image)
             result.close()
@@ -112,17 +112,17 @@ class FaceDatabase:
         ORDER BY imageYear ASC, sourcePath ASC 
         LIMIT %s OFFSET %s
         """ % (limit, offset))
-        for imageId, sourcePath, localFilePath, resizedFilePath, taggedFilePath, fileExt, peopleId, peopleIdRecognized, peopleIdAssign, imageYear, sample, scanned, scanWrong in result:
+        for imageId, sourcePath, localFilePath, resizedFilePath, taggedFilePath, fileExt, peopleId, peopleIdRecognized, peopleIdAssign, imageYear, sample, scanned, reviewed in result:
             image = {
                 'localFilePath': localFilePath,
                 'resizedFilePath': resizedFilePath,
                 'taggedFilePath': taggedFilePath,
+                'reviewed': False if reviewed == 0 else True,
+                'sample': False if sample == 0 else True,
                 'peopleId': peopleId,
                 'peopleIdRecognized': peopleIdRecognized,
                 'peopleIdAssign': peopleIdAssign,
                 'scanned': False if scanned == 0 else True,
-                'scanWrong': False if scanWrong == 0 else True,
-                'sample': False if sample == 0 else True,
                 'sourcePath': sourcePath,
                 'imageId': imageId,
                 'fileExt': fileExt,
@@ -132,7 +132,7 @@ class FaceDatabase:
         self.logger.info("got %s image records" % len(images))
         return images
 
-    def get_scanned_faces(self, limit=100, offset=0):
+    def get_tagged_images(self, limit=100, offset=0):
         self.logger.info("getting image records with limit=%s offset=%s" % (limit, offset))
         images = []
         conn = self.engine.connect()
@@ -141,17 +141,17 @@ class FaceDatabase:
         ORDER BY imageYear ASC, sourcePath ASC 
         LIMIT %s OFFSET %s
         """ % (limit, offset))
-        for imageId, sourcePath, localFilePath, resizedFilePath, taggedFilePath, fileExt, peopleId, peopleIdRecognized, peopleIdAssign, imageYear, sample, scanned, scanWrong in result:
+        for imageId, sourcePath, localFilePath, resizedFilePath, taggedFilePath, fileExt, peopleId, peopleIdRecognized, peopleIdAssign, imageYear, sample, scanned, reviewed in result:
             image = {
                 'localFilePath': localFilePath,
                 'resizedFilePath': resizedFilePath,
                 'taggedFilePath': taggedFilePath,
+                'reviewed': False if reviewed == 0 else True,
+                'sample': False if sample == 0 else True,
                 'peopleId': peopleId,
                 'peopleIdRecognized': peopleIdRecognized,
                 'peopleIdAssign': peopleIdAssign,
                 'scanned': False if scanned == 0 else True,
-                'scanWrong': False if scanWrong == 0 else True,
-                'sample': False if sample == 0 else True,
                 'sourcePath': sourcePath,
                 'imageId': imageId,
                 'fileExt': fileExt,
@@ -163,23 +163,23 @@ class FaceDatabase:
 
     def toggle_sample(self, imageId):
         conn = self.engine.connect()
-        face = self.get_image(imageId, conn=conn)
-        if face is not None:
-            u = self.images.update().where(self.images.c.imageId == imageId).values(sample=(not face['sample']))
+        image = self.get_image(imageId, conn=conn)
+        if image is not None:
+            u = self.images.update().where(self.images.c.imageId == imageId).values(sample=(not image['sample']))
             print(u.compile(compile_kwargs={"literal_binds": True}))
             conn.execute(u)
-            self.logger.info("updated image with imageId=%s sample=%s" % (imageId, face['sample']))
+            self.logger.info("updated image with imageId=%s sample=%s" % (imageId, image['sample']))
         else:
             self.logger.error("image record not found: %s" % imageId)
 
-    def toggle_scan_result(self, imageId):
+    def toggle_reviewed(self, imageId):
         conn = self.engine.connect()
-        face = self.get_image(imageId, conn=conn)
-        if face is not None:
-            u = self.images.update().where(self.images.c.imageId == imageId).values(scanWrong=(not face['scanWrong']))
+        image = self.get_image(imageId, conn=conn)
+        if image is not None:
+            u = self.images.update().where(self.images.c.imageId == imageId).values(reviewed=(not image['reviewed']))
             print(u.compile(compile_kwargs={"literal_binds": True}))
             conn.execute(u)
-            self.logger.info("updated image with imageId=%s scanWrong=%s" % (imageId, face['scanWrong']))
+            self.logger.info("updated image with imageId=%s reviewed=%s" % (imageId, image['reviewed']))
         else:
             self.logger.error("image record not found: %s" % imageId)
 

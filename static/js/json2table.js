@@ -89,12 +89,12 @@ let fetchQueryResult = (action, id) => {
         xmlHttp.open("GET", "/images/copy", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
-    }else if(action === "list_faces"){
+    }else if(action === "list_images"){
         xmlHttp.open("GET", "/images/list", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
-    }else if(action === "list_scanned_faces"){
-        xmlHttp.open("GET", "/images/scanned/faces", true);
+    }else if(action === "list_tagged_images"){
+        xmlHttp.open("GET", "/tagged/images/list", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
     }else if(action === "use_dataset"){
@@ -129,20 +129,20 @@ let fetchQueryResult = (action, id) => {
         xmlHttp.open("GET", "/model/backup", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
-    }else if(action === "toggle_face_sample"){
-        xmlHttp.open("GET", "/face/toggle/sample/" + id, true);
+    }else if(action === "toggle_sample"){
+        xmlHttp.open("GET", "/image/toggle/sample/" + id, true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
-    }else if(action === "toggle_face_scan_result"){
-        xmlHttp.open("GET", "/face/toggle/scan/result/" + id, true);
+    }else if(action === "toggle_reviewed"){
+        xmlHttp.open("GET", "/image/toggle/reviewed/" + id, true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
-    }else if(action === "toggle_scanned_face_sample"){
-        xmlHttp.open("GET", "/face/scanned/toggle/sample/" + id, true);
+    }else if(action === "toggle_sample_tagged"){
+        xmlHttp.open("GET", "/tagged/image/toggle/sample/" + id, true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
-    }else if(action === "toggle_scanned_face_scan_result"){
-        xmlHttp.open("GET", "/face/scanned/toggle/scan/result/" + id, true);
+    }else if(action === "toggle_reviewed_tagged"){
+        xmlHttp.open("GET", "/tagged/image/toggle/reviewed/" + id, true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
     }
