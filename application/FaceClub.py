@@ -131,7 +131,7 @@ class FaceClub:
 
     def fromRepositoryToDataset(self):
         self.workspace.isCopyingImagesToDataset = True
-        # TODO copy images from external volumes
+        # TODO copy (replace) images (which are not in workspace) from volumes to dataset for training
         self.workspace.isCopyingImagesToDataset = False
         # finally create a version backup
         self.workspace.backupDataset()
@@ -200,7 +200,6 @@ class FaceClub:
                                                      face['pos_top'], face['pos_right'],
                                                      face['pos_bottom'], face['pos_left'],
                                                      face['peopleId'], personName, shortName)
-                    # TODO sync back to image db (optional, to improve recognition speed)
                 yield to_json({
                     "recognition_progress": "{}/{}".format(i, len(records)),
                     "peopleId": ",".join(peopleIds),

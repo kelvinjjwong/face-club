@@ -562,24 +562,6 @@ def untag_all(imageId):
     })
 
 
-@app.route("/add/sample", methods=["POST"])
-def add_image_to_dataset():
-    # TODO add image to dataset for training
-    content = request.json
-    image_file = content["image_file"]
-    peopleId = content["peopleId"]
-    pass
-
-
-@app.route("/remove/sample", method=["POST"])
-def remove_image_from_dataset():
-    # TODO remove image from dataset for training
-    content = request.json
-    image_file = content["image_file"]
-    peopleId = content["peopleId"]
-    pass
-
-
 @app.route("/sync/faces")
 def sync_back_to_image_db():
     # TODO sync faces,resized_images,tagged_images back to image db
