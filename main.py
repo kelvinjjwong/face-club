@@ -491,7 +491,6 @@ def update_peopleId_of_image(imageId):
     image = faceClub.faceDatabase.get_image(imageId)
     taggedFilePath = faceClub.faceRecognizer.tag_faces_on_image(image['resizedFilePath'], faces)
     faceClub.faceDatabase.update_image_taggedFilePath(imageId, taggedFilePath)
-    # TODO sync faces,resized_images,tagged_images back to image db
     pass
 
 @app.route("/tag/faces", methods=['POST'])

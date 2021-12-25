@@ -121,6 +121,21 @@ function initDraw(canvas) {
 
                 curr_pos.pos_right = x;
                 curr_pos.pos_bottom = y;
+
+                let left = curr_pos.pos_left;
+                let top = curr_pos.pos_top;
+                let right = curr_pos.pos_right;
+                let bottom = curr_pos.pos_bottom;
+
+                if(left > right) { // flip the points
+                    curr_pos.pos_left = right;
+                    curr_pos.pos_right = left;
+                }
+                if(top > bottom){ // flip to points
+                    curr_pos.pos_top = bottom;
+                    curr_pos.pos_bottom = top;
+                }
+
                 curr_pos.peopleIdRecognized = '';
                 curr_pos.peopleIdAssign = '';
                 curr_pos.peopleId = '';
@@ -180,15 +195,21 @@ function openDialog(item) {
 
     let canvas = document.getElementById('preview_canvas');
     let ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     let image = document.getElementById("img");
     let item_width = item.pos_right - item.pos_left;
     let item_height = item.pos_bottom - item.pos_top;
+
+    // scale to match aspect ratio
     let display_width = 80;
     let display_height = 80;
-    // TODO scale to match aspect ratio
-    //if (Math.max(item_width, item_height) > origin_scale) {
-    //    scale = origin_scale / Math.max(item_width, item_height) * origin_scale;
-    //}
+    if(item_width > item_height) {
+        display_height = (item_height / item_width) * display_height;
+    }else{
+        display_width = (item_width / item_height) * display_width;
+    }
+
     ctx.drawImage(image,
         item.pos_left, item.pos_top,   // Start at x,y pixels from the left and the top of the image (crop),
         item_width, item_height,   // "Get" a (w * h) area from the source image (crop),
