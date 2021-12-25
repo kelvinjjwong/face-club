@@ -28,7 +28,7 @@ class FaceDatabase:
                             Column("imageYear", Integer),
                             Column("sample", Boolean),
                             Column("scanned", Boolean),
-                            Column("scanWrong", Boolean)
+                            Column("scanWrong", Boolean)  # TODO replace 'scanWrong' with 'reviewed'
                             )
         self.faces = Table('faces', self.metadata,
                            Column("imageId", String(50)),
@@ -289,7 +289,7 @@ class FaceDatabase:
             return face
         else:
             self.logger.info("face record not found: imageId=%s top=%s right=%s bottom=%s left=%s"
-                              % (imageId, top, right, bottom, left))
+                             % (imageId, top, right, bottom, left))
             return None
 
     def insert_face(self, face):

@@ -24,9 +24,9 @@ def face_job():
         if faceClub.isShuttingDown or faceClub.schedule.should_stop_job_now(job_id):
             logger.info("break %s job task due to force_stop signal" % job_id)
             break
-        # TODO copy images from volume
-        # TODO recognize faces
-        # TODO sync faces,resized_images,tagged_images back to image db
+        # TODO auto job - copy images from volume
+        # TODO auto job - recognize faces
+        # TODO auto job - sync faces,resized_images,tagged_images back to image db
         time.sleep(1)
         seconds -= 1
     faceClub.schedule.mark_job_stopped(job_id)
@@ -34,9 +34,7 @@ def face_job():
 
 
 faceClub.schedule.add('face_job', 5, face_job)
-
-
-# faceClub.schedule.stop('face_job')
+faceClub.schedule.stop('face_job')
 
 
 @app.before_request
@@ -157,6 +155,12 @@ def list_jobs():
 def copy_images_to_workspace():
     result, records = faceClub.fromRepositoryToWorkspace()
     return to_json(records)
+
+
+@app.route("/images/review")
+def copy_images_to_workspace_for_review():
+    # TODO copy images from volumes to workspace for review
+    pass
 
 
 @app.route("/images/list")
