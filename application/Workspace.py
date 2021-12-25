@@ -281,7 +281,7 @@ class Workspace:
         folder = os.path.realpath(self.workspace_conf["model"])
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
-            if os.path.isdir(file_path) and filename.startswith("model_"):
+            if os.path.isfile(file_path) and filename.startswith("model_"):
                 backups.append({
                     'backup_model': filename,
                     'last_modified_time': datetime.fromtimestamp(int(os.path.getmtime(file_path)))
@@ -298,4 +298,22 @@ class Workspace:
         filename = ("%s%s" % (imageId, fileExt))
         return os.path.join(folder, filename)
 
+    def generate_backup_file_path(self, origin_file_path, suffix):
+        filename = os.path.basename(origin_file_path)
+        folder = os.path.dirname(origin_file_path)
+        origin_filename, extension = os.path.splitext(filename)
+        part = str(origin_filename).partition("_")
+        out_filename = "%s_%s%s" % (part[0], suffix, extension)
+        out_file_path = os.path.join(folder, out_filename)
+        return out_file_path, out_filename, extension
 
+    def backup_model(self, model_file):
+        dt = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        out_file_path, out_filename, file_ext = self.generate_backup_file_path(model_file, dt)
+        self.logger.info("copy from: %s" % model_file)
+        self.logger.info("copy to  : %s" % out_file_path)
+        try:
+            shutil.copy(model_file, out_file_path)
+        except Exception as e:
+            print(e)
+        return out_file_path

@@ -359,6 +359,14 @@ def list_model_backups():
     return to_json(records)
 
 
+@app.route("/model/backup")
+def backup_model():
+    content = request.json
+    model_file = os.path.join(faceClub.config.workspace_conf["model"], "model.pickle")
+    faceClub.workspace.backup_model(model_file)
+    return list_model_backups()
+
+
 @app.route("/face/toggle/sample/<imageId>")
 def toggle_face_sample(imageId):
     faceClub.faceDatabase.toggle_sample(imageId)
@@ -481,6 +489,7 @@ def tag_a_person(content):
                 % (content["imageId"], content["top"], content["right"], content["bottom"], content["left"],
                    content["peopleId"]))
 
+
 def update_peopleId_of_image(imageId):
     faces = faceClub.faceDatabase.get_faces(imageId)
     peopleIds = []
@@ -492,6 +501,7 @@ def update_peopleId_of_image(imageId):
     taggedFilePath = faceClub.faceRecognizer.tag_faces_on_image(image['resizedFilePath'], faces)
     faceClub.faceDatabase.update_image_taggedFilePath(imageId, taggedFilePath)
     pass
+
 
 @app.route("/tag/faces", methods=['POST'])
 def tag_faces():

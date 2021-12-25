@@ -35,7 +35,6 @@ function dataset_of_people(peopleId){
     fetchQueryResult("list_dataset_of_people", peopleId)
 }
 
-function backup_model(model){
-    // TODO backup_model
-    console.log("backup_model: "+ model)
+function backup_model(){
+    fetchQueryResult("backup_model")
 }

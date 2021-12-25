@@ -113,6 +113,10 @@ let fetchQueryResult = (action, id) => {
         xmlHttp.open("GET", "/model/backups", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
+    }else if(action === "backup_model"){
+        xmlHttp.open("GET", "/model/backup", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
     }else if(action === "stop_job"){
         xmlHttp.open("GET", "/job/stop", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
