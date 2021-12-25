@@ -7,6 +7,8 @@ class Schedule:
     scheduler = None
     isShuttingDown = False
 
+    job_blockers = []
+
     def __init__(self):
         self.logger = logging.getLogger('Scheduler')
         self.scheduler = BackgroundScheduler()
@@ -22,6 +24,39 @@ class Schedule:
             seconds=seconds,
             id=job_id
         )
+        self.job_blockers.append({
+            'job_id': job_id,
+            'stop': False,
+            'stopped': False
+        })
+
+    def mark_job_stopped(self, job_id):
+        for job_blocker in self.job_blockers:
+            if job_blocker["job_id"] == job_id:
+                job_blocker["stopped"] = True
+
+    def mark_job_runnable(self, job_id):
+        for job_blocker in self.job_blockers:
+            if job_blocker["job_id"] == job_id:
+                job_blocker["stopped"] = False
+
+    def force_stop_job(self, job_id):
+        self.scheduler.pause_job(job_id)
+        for job_blocker in self.job_blockers:
+            if job_blocker["job_id"] == job_id:
+                job_blocker["stop"] = True
+
+    def unblock_job(self, job_id):
+        for job_blocker in self.job_blockers:
+            if job_blocker["job_id"] == job_id:
+                job_blocker["stop"] = False
+        self.mark_job_runnable(job_id)
+
+    def should_stop_job_now(self, job_id):
+        for job_blocker in self.job_blockers:
+            if job_blocker["job_id"] == job_id and job_blocker["stop"] is True:
+                return True
+        return False
 
     def resume(self, job_id):
         self.scheduler.resume_job(job_id)
@@ -34,6 +69,13 @@ class Schedule:
 
     def resumeAll(self):
         self.scheduler.resume()
+
+    def is_job_stopped(self, job_id):
+        for job_blocker in self.job_blockers:
+            if job_blocker["job_id"] == job_id:
+                print(job_blocker)
+                return job_blocker["stopped"]
+        return True
 
     def status(self, job_id):
         job = self.scheduler.get_job(job_id)

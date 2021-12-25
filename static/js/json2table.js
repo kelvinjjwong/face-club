@@ -69,6 +69,18 @@ let fetchQueryResult = (action, id) => {
         xmlHttp.open("GET", "/job/list", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
+    }else if(action === "stop_job"){
+        xmlHttp.open("GET", "/job/stop", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
+    }else if(action === "force_stop_job"){
+        xmlHttp.open("GET", "/job/force/stop/" + id, true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
+    }else if(action === "resume_job"){
+        xmlHttp.open("GET", "/job/start", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
     }else if(action === "health"){
         xmlHttp.open("GET", "/health", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
@@ -115,14 +127,6 @@ let fetchQueryResult = (action, id) => {
         xmlHttp.send();
     }else if(action === "backup_model"){
         xmlHttp.open("GET", "/model/backup", true);
-        xmlHttp.setRequestHeader("Content-type", "text/plain");
-        xmlHttp.send();
-    }else if(action === "stop_job"){
-        xmlHttp.open("GET", "/job/stop", true);
-        xmlHttp.setRequestHeader("Content-type", "text/plain");
-        xmlHttp.send();
-    }else if(action === "resume_job"){
-        xmlHttp.open("GET", "/job/start", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
     }else if(action === "toggle_face_sample"){

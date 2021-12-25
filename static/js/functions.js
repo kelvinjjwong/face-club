@@ -2,9 +2,8 @@ function stop_job(id) {
     fetchQueryResult("stop_job")
 }
 
-function kill_job(id) {
-    // TODO kill job
-    console.log("kill job: "+ id)
+function force_stop_job(id) {
+    fetchQueryResult("force_stop_job", id)
 }
 
 function resume_job(id){

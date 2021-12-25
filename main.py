@@ -16,23 +16,27 @@ logger = logging.getLogger('WebAPI')
 
 
 def face_job():
-    logger.info('job task started')
+    job_id = 'face_job'
+    logger.info('%s job task started' % job_id)
     seconds = 15
     while seconds > 0:
         logger.info("is shutting down %s" % faceClub.isShuttingDown)
-        if faceClub.isShuttingDown:
-            logger.info("break job task due to shutting down")
+        if faceClub.isShuttingDown or faceClub.schedule.should_stop_job_now(job_id):
+            logger.info("break %s job task due to force_stop signal" % job_id)
             break
         # TODO copy images from volume
         # TODO recognize faces
         # TODO sync faces,resized_images,tagged_images back to image db
         time.sleep(1)
         seconds -= 1
-    logger.info('job task completed')
+    faceClub.schedule.mark_job_stopped(job_id)
+    logger.info('%s job task completed' % job_id)
 
 
 faceClub.schedule.add('face_job', 5, face_job)
-faceClub.schedule.stop('face_job')
+
+
+# faceClub.schedule.stop('face_job')
 
 
 @app.before_request
@@ -103,6 +107,24 @@ def stop_job():
     return list_jobs()
 
 
+@app.route("/job/force/stop/<job_id>")
+def force_stop_job(job_id):
+    logger.info("force stop job %s" % job_id)
+    try:
+        faceClub.schedule.force_stop_job(job_id)
+        while True:
+            logger.info("checking final stopped signal of job %s" % job_id)
+            stopped = faceClub.schedule.is_job_stopped(job_id)
+            if stopped:
+                break
+            else:
+                time.sleep(0.1)
+        faceClub.schedule.unblock_job(job_id)
+    except Exception as e:
+        print(e)
+    return list_jobs()
+
+
 @app.route("/job/start")
 def start_job():
     faceClub.schedule.resume('face_job')
@@ -124,7 +146,7 @@ def list_jobs():
                 'id': record["id"]
             },
             {
-                'func': 'kill_job',
+                'func': 'force_stop_job',
                 'id': record["id"]
             }
         ]
@@ -538,6 +560,24 @@ def untag_all(imageId):
     return jsonify({
         'status': 'ok'
     })
+
+
+@app.route("/add/sample", methods=["POST"])
+def add_image_to_dataset():
+    # TODO add image to dataset for training
+    content = request.json
+    image_file = content["image_file"]
+    peopleId = content["peopleId"]
+    pass
+
+
+@app.route("/remove/sample", method=["POST"])
+def remove_image_from_dataset():
+    # TODO remove image from dataset for training
+    content = request.json
+    image_file = content["image_file"]
+    peopleId = content["peopleId"]
+    pass
 
 
 @app.route("/sync/faces")
