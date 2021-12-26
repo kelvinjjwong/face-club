@@ -108,7 +108,7 @@ class FaceClub:
             self.workspace.cleanWorkspace()
             self.faceDatabase.dropSchema()
             self.faceDatabase.initSchema()
-            external_records = asyncio.run(self.imageDatabase.unrecognizedImages(100))
+            external_records = asyncio.run(self.imageDatabase.unrecognizedImages(100, reviewed=(not runByJob)))
             all_mounted, volumes = self.workspace.check_mount_point(external_records)
             if not all_mounted:
                 msg = "External volume is not mounted. Operation aborted."

@@ -36,7 +36,7 @@ class ImageDatabase:
             self.logger.info(value["name"])
         await conn.close()
 
-    async def unrecognizedImages(self, amount):
+    async def unrecognizedImages(self, amount, reviewed: bool = None):  # TODO add sql condition for 'reviewed'
         conn = await asyncpg.connect(user=self.username,
                                      password=self.password,
                                      database=self.database,
