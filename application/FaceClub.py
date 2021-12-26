@@ -103,7 +103,7 @@ class FaceClub:
     def should_stop_recognition(self):
         return self.faceRecognizer.isTraining or self.workspace.isCopyingImagesToWorkspace
 
-    def fromRepositoryToWorkspace(self, recreate_db=False):
+    def fromRepositoryToWorkspace(self, runByJob=False, recreate_db=False):
         if self.config.external_database_enable:
             self.workspace.cleanWorkspace()
             self.faceDatabase.dropSchema()
@@ -118,7 +118,7 @@ class FaceClub:
             else:
                 self.logger.info(volumes)
                 self.logger.info("External volume is mounted.")
-            incoming_images = self.workspace.fromImageRepositoryToWorkspace(external_records)
+            incoming_images = self.workspace.fromImageRepositoryToWorkspace(external_records, runByJob=runByJob)
             for image in incoming_images:
                 self.faceDatabase.insert_image(image)
             msg = "Processed %s image records" % len(incoming_images)

@@ -153,14 +153,14 @@ def list_jobs():
 
 @app.route("/images/copy")
 def copy_images_to_workspace():
-    result, records = faceClub.fromRepositoryToWorkspace()
+    result, records = faceClub.fromRepositoryToWorkspace(runByJob=True)
     return to_json(records)
 
 
 @app.route("/images/review")
 def copy_images_to_workspace_for_review():
-    # TODO copy images from volumes to workspace for review
-    pass
+    result, records = faceClub.fromRepositoryToWorkspace(runByJob=False)
+    return to_json(records)
 
 
 @app.route("/images/list")
