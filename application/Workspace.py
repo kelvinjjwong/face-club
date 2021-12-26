@@ -32,7 +32,7 @@ class Workspace:
             overall_result = overall_result & ex
         return overall_result, volumes_dict
 
-    def fromImageRepositoryToWorkspace(self, external_db_records):
+    def fromImageRepositoryToWorkspace(self, external_db_records, runByJob=False):
         self.isCopyingImagesToWorkspace = True
         rtn = []
         folder = self.workspace_conf["images"]
@@ -58,38 +58,8 @@ class Workspace:
                 "imageYear": image["photoTakenYear"],
                 "sample": False,
                 "scanned": False,
-                "reviewed": False
-            }
-            rtn.append(rec)
-        self.isCopyingImagesToWorkspace = False
-        return rtn
-
-    def fromImageFaceRepositoryToWorkspace(self, external_db_records):
-        self.isCopyingImagesToWorkspace = True
-        rtn = []
-        folder = self.workspace_conf["images"]
-        for image in external_db_records:
-            src_file = ("%s%s/%s" % (image["cropPath"], image["subPath"], image["filename"]))
-            self.logger.info("src: %s" % src_file)
-            _, extension = os.path.splitext(image["filename"])
-            new_filename = ("%s%s" % (image["id"], extension))
-            dest_file = os.path.join(folder, new_filename)
-            self.logger.info("des: %s" % dest_file)
-            shutil.copy(src_file, dest_file)
-            rec = {
-                "imageId": image["imageId"],
-                "sourcePath": src_file,
-                "localFilePath": '',
-                "resizedFilePath": '',
-                "taggedFilePath": '',
-                "fileExt": extension,
-                "peopleId": "",
-                "peopleIdRecognized": "",
-                "peopleIdAssign": "",
-                "imageYear": image["imageYear"],
-                "sample": False,
-                "scanned": False,
-                "reviewed": False
+                "reviewed": False,
+                "runByJob": runByJob
             }
             rtn.append(rec)
         self.isCopyingImagesToWorkspace = False

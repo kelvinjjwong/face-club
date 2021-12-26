@@ -118,12 +118,12 @@ class FaceClub:
             else:
                 self.logger.info(volumes)
                 self.logger.info("External volume is mounted.")
-            incoming_faces = self.workspace.fromImageRepositoryToWorkspace(external_records)
-            for face in incoming_faces:
-                self.faceDatabase.insert_image(face)
-            msg = "Processed %s image records" % len(incoming_faces)
+            incoming_images = self.workspace.fromImageRepositoryToWorkspace(external_records)
+            for image in incoming_images:
+                self.faceDatabase.insert_image(image)
+            msg = "Processed %s image records" % len(incoming_images)
             self.logger.info(msg)
-            return True, incoming_faces
+            return True, incoming_images
         else:
             msg = "External DB connection is DISABLED. Operation aborted."
             self.logger.info(msg)
@@ -143,7 +143,7 @@ class FaceClub:
                 return p["name"], p["shortName"]
         return '', ''
 
-    def recognize_images(self, limit=10):
+    def recognize_images(self, tagged: bool = None, runByJob=False, limit=10):
         self.faceRecognizer.isRecognizing = True
         people_names = asyncio.run(self.imageDatabase.get_people())
         model_file = self.workspace.get_model_file_path()
@@ -157,7 +157,7 @@ class FaceClub:
             "time_cost_sec": 0,
             "pic_size": ""
         })
-        records = self.faceDatabase.get_images(limit=limit)
+        records = self.faceDatabase.get_images(tagged=tagged, runByJob=runByJob, limit=limit)
         yield to_json({
             "recognition_progress": "0/{}".format(len(records)),
             "peopleId": "",

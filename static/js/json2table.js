@@ -65,7 +65,12 @@ let fetchQueryResult = (action, id) => {
     };
 
     document.getElementById("msg").innerText = "Executing ...";
-    if (action === "job_status"){
+
+    if(action === "health") {
+        xmlHttp.open("GET", "/health", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
+    }else if (action === "job_status"){
         xmlHttp.open("GET", "/job/list", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
@@ -81,10 +86,6 @@ let fetchQueryResult = (action, id) => {
         xmlHttp.open("GET", "/job/start", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
-    }else if(action === "health"){
-        xmlHttp.open("GET", "/health", true);
-        xmlHttp.setRequestHeader("Content-type", "text/plain");
-        xmlHttp.send();
     }else if(action === "copy_images"){
         xmlHttp.open("GET", "/images/copy", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
@@ -95,6 +96,10 @@ let fetchQueryResult = (action, id) => {
         xmlHttp.send();
     }else if(action === "list_tagged_images"){
         xmlHttp.open("GET", "/tagged/images/list", true);
+        xmlHttp.setRequestHeader("Content-type", "text/plain");
+        xmlHttp.send();
+    }else if(action === "list_untagged_images"){
+        xmlHttp.open("GET", "/untagged/images/list", true);
         xmlHttp.setRequestHeader("Content-type", "text/plain");
         xmlHttp.send();
     }else if(action === "use_dataset"){

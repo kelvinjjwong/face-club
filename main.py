@@ -229,9 +229,75 @@ def list_images_in_workspace():
     return to_json(records)
 
 
+@app.route("/untagged/images/list")
+def list_untagged_images_in_workspace():
+    records = faceClub.faceDatabase.get_images(tagged=False, limit=faceClub.config.internal_database_display_amount)
+    for record in records:
+        resizedFilePath = record["resizedFilePath"]
+        taggedFilePath = record["taggedFilePath"]
+        record["localFilePath"] = {
+            'text': record["localFilePath"],
+            'actions': [
+                {
+                    'func': 'view',
+                    'id': record["localFilePath"]
+                },
+                {
+                    'func': 'thumbnail',
+                    'id': str(record["localFilePath"]).replace(record["fileExt"], ("_%s%s" % (200, record["fileExt"])))
+                }
+            ]
+        }
+        record["resizedFilePath"] = {
+            'text': resizedFilePath,
+            'actions': [
+                {
+                    'func': 'view',
+                    'id': resizedFilePath
+                },
+                {
+                    'func': 'canvas',
+                    'id': resizedFilePath
+                }
+            ]
+        }
+        record["taggedFilePath"] = {
+            'text': taggedFilePath,
+            'actions': [
+                {
+                    'func': 'view',
+                    'id': taggedFilePath
+                },
+                {
+                    'func': 'canvas',
+                    'id': resizedFilePath
+                }
+            ]
+        }
+        record["sample"] = {
+            'text': record["sample"],
+            'actions': [
+                {
+                    'func': 'toggle_sample_tagged',
+                    'id': record["imageId"]
+                }
+            ]
+        }
+        record["reviewed"] = {
+            'text': record["reviewed"],
+            'actions': [
+                {
+                    'func': 'toggle_reviewed_tagged',
+                    'id': record["imageId"]
+                }
+            ]
+        }
+    return to_json(records)
+
+
 @app.route("/tagged/images/list")
 def list_tagged_images_in_workspace():
-    records = faceClub.faceDatabase.get_tagged_images(limit=faceClub.config.internal_database_display_amount)
+    records = faceClub.faceDatabase.get_images(tagged=True, limit=faceClub.config.internal_database_display_amount)
     for record in records:
         resizedFilePath = record["resizedFilePath"]
         taggedFilePath = record["taggedFilePath"]

@@ -28,7 +28,8 @@ class FaceDatabase:
                             Column("imageYear", Integer),
                             Column("sample", Boolean),
                             Column("scanned", Boolean),
-                            Column("reviewed", Boolean)
+                            Column("reviewed", Boolean),
+                            Column("runByJob", Boolean)
                             )
         self.faces = Table('faces', self.metadata,
                            Column("imageId", String(50)),
@@ -89,7 +90,8 @@ class FaceDatabase:
                 'imageYear': row["imageYear"],
                 'sample': row["sample"],
                 'scanned': row["scanned"],
-                'reviewed': row["reviewed"]
+                'reviewed': row["reviewed"],
+                'runByJob': row["runByJob"]
             }
             self.logger.info(image)
             result.close()
@@ -103,16 +105,19 @@ class FaceDatabase:
         conn = self.engine.connect()
         conn.execute("DELETE FROM images")
 
-    def get_images(self, limit=100, offset=0):
+    def get_images(self, limit=100, offset=0, tagged: bool = None, runByJob: bool = None):
         self.logger.info("getting image records with limit=%s offset=%s" % (limit, offset))
         images = []
         conn = self.engine.connect()
         result = conn.execute("""
-        SELECT * FROM images 
+        SELECT * FROM images WHERE 1=1 %s %s
         ORDER BY imageYear ASC, sourcePath ASC 
         LIMIT %s OFFSET %s
-        """ % (limit, offset))
-        for imageId, sourcePath, localFilePath, resizedFilePath, taggedFilePath, fileExt, peopleId, peopleIdRecognized, peopleIdAssign, imageYear, sample, scanned, reviewed in result:
+        """ % (
+            ("" if runByJob is None else ("AND runByJob=1" if runByJob else "AND runByJob=0")),
+            ("" if tagged is None else ("AND peopleId<>''" if tagged else "AND peopleId=''")),
+            limit, offset))
+        for imageId, sourcePath, localFilePath, resizedFilePath, taggedFilePath, fileExt, peopleId, peopleIdRecognized, peopleIdAssign, imageYear, sample, scanned, reviewed, runByJob in result:
             image = {
                 'localFilePath': localFilePath,
                 'resizedFilePath': resizedFilePath,
@@ -123,35 +128,7 @@ class FaceDatabase:
                 'peopleIdRecognized': peopleIdRecognized,
                 'peopleIdAssign': peopleIdAssign,
                 'scanned': False if scanned == 0 else True,
-                'sourcePath': sourcePath,
-                'imageId': imageId,
-                'fileExt': fileExt,
-                'imageYear': imageYear
-            }
-            images.append(image)
-        self.logger.info("got %s image records" % len(images))
-        return images
-
-    def get_tagged_images(self, limit=100, offset=0):
-        self.logger.info("getting image records with limit=%s offset=%s" % (limit, offset))
-        images = []
-        conn = self.engine.connect()
-        result = conn.execute("""
-        SELECT * FROM images WHERE scanned=1 AND taggedFilePath <> ''
-        ORDER BY imageYear ASC, sourcePath ASC 
-        LIMIT %s OFFSET %s
-        """ % (limit, offset))
-        for imageId, sourcePath, localFilePath, resizedFilePath, taggedFilePath, fileExt, peopleId, peopleIdRecognized, peopleIdAssign, imageYear, sample, scanned, reviewed in result:
-            image = {
-                'localFilePath': localFilePath,
-                'resizedFilePath': resizedFilePath,
-                'taggedFilePath': taggedFilePath,
-                'reviewed': False if reviewed == 0 else True,
-                'sample': False if sample == 0 else True,
-                'peopleId': peopleId,
-                'peopleIdRecognized': peopleIdRecognized,
-                'peopleIdAssign': peopleIdAssign,
-                'scanned': False if scanned == 0 else True,
+                'runByJob': False if runByJob == 0 else True,
                 'sourcePath': sourcePath,
                 'imageId': imageId,
                 'fileExt': fileExt,
